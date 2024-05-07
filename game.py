@@ -23,8 +23,7 @@ class Game:
         self.window_height = height
         self.state_stack = []
 
-        self.logo = pg.image.load("res/textures/logo.png")
-        self.logo_small = pg.transform.scale(self.logo, [175, 175])
+        self.logo_small = pg.transform.scale(pg.image.load("res/textures/logo.png"), [175, 175])
 
         self.font_200 = pg.font.Font("res/fonts/F1-regular.ttf", 200)
         self.font_100 = pg.font.Font("res/fonts/F1-regular.ttf", 100)
@@ -32,13 +31,15 @@ class Game:
         self.font_40 = pg.font.Font("res/fonts/F1-regular.ttf", 40)
         self.font_24 = pg.font.Font("res/fonts/F1-regular.ttf", 25)
 
-        self.bg_color = (157, 206, 226)
+        self.bg_color = (135, 206, 235)
         self.color_black = (0, 0, 0)
+        self.color_dark_grey = (67, 69, 74)
         self.color_red = (255, 0, 0)
         self.color_white = (255, 255, 255)
+        self.color_green = (0, 136, 0)
 
         self.title_text = self.font_100.render("acing", False, self.color_black).convert()
-        self.credit_text = self.font_24.render("Game by Joshua (1092067) and Danny (1091749)", False, self.color_black).convert()
+        self.credit_text = self.font_24.render("Game by Joshua (1092067) and Danny (1091749)", False, self.color_white).convert()
 
         self.click_sound = pg.mixer.Sound("res/sfx/click.wav")
 
@@ -75,15 +76,32 @@ class Game:
 
             # Render
             self.screen.fill(self.bg_color)
+
+            # Grass background
+            green_background = pg.Rect((0, 400), (self.screen.get_width(), 400))
+            pg.draw.rect(self.screen, self.color_green, green_background)
+
+            # Road
+            road_background = pg.Rect((340, 400), (600, 400))
+            pg.draw.rect(self.screen, self.color_black, road_background)
+            # Road side - Left
+            pg.draw.polygon(self.screen, self.color_black, ((340, 400), (340, 720), (250, 720)))
+            # Road side - Right
+            pg.draw.polygon(self.screen, self.color_black, ((940, 400), (940, 720), (1035, 720)))
+            # Road side wall - left
+            pg.draw.polygon(self.screen, self.color_red, ((340, 400), (250, 720), (210, 720), (300, 400)))
+            # Road side wall - right
+            pg.draw.polygon(self.screen, self.color_red, ((940, 400), (1035, 720), (1075, 720), (980, 400)))
+
             # Play button and text
-            pg.draw.rect(self.screen, self.color_black, play_button, border_radius=15)
+            pg.draw.rect(self.screen, self.color_dark_grey, play_button, border_radius=15)
             if play_button.collidepoint(pg.mouse.get_pos()):
                 play_text = self.font_50.render("Play", False, self.color_red).convert()
             else:
                 play_text = self.font_50.render("Play", False, self.color_white).convert()
             self.screen.blit(play_text, play_text.get_rect(center=(play_button.centerx, play_button.centery)))
             # Quit button and text
-            pg.draw.rect(self.screen, self.color_black, quit_button, border_radius=15)
+            pg.draw.rect(self.screen, self.color_dark_grey, quit_button, border_radius=15)
             if quit_button.collidepoint(pg.mouse.get_pos()):
                 quit_text = self.font_50.render("Quit", False, self.color_red).convert()
             else:
@@ -149,8 +167,8 @@ class Game:
             self.screen.blit(quit_text, quit_text.get_rect(center=(quit_button.centerx, quit_button.centery)))
 
             # Game icon
-            self.screen.blit(self.logo,
-                             self.logo.get_rect(center=(self.window_width / 2, self.window_height / 2)))
+            self.screen.blit(self.logo_small,
+                             self.logo_small.get_rect(center=(self.window_width / 2, self.window_height / 2)))
             # PyGame Render
             pg.display.update()
             self.clock.tick(self.fps)
