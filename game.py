@@ -1,5 +1,5 @@
 import pygame as pg
-import pygame.transform
+import math
 
 from car import Car
 
@@ -13,10 +13,14 @@ class Game:
         pg.display.set_caption(title)
         # pg.display.set_icon(pg.image.load("res/icon.png"))
 
-        self.car_1 = Car(pg.image.load("res/textures/car_merc.png").convert_alpha(), [200, 200])
+        self.player_car = Car(pg.transform.scale(pg.image.load("res/textures/car_merc.png"), (100, 35)).convert_alpha(),
+                              [200, 200])
+        self.cpu_car = Car(pg.transform.scale(pg.image.load("res/textures/car_alfa.png"), (100, 35)).convert_alpha(),
+                           [500, 200])
 
         self.a_down = False
         self.d_down = False
+        self.w_down = False
 
         # Game logic variables
         self.window_width = width
@@ -24,6 +28,7 @@ class Game:
         self.state_stack = []
 
         self.logo = pg.image.load("res/textures/logo.png")
+        self.logo_small = pg.transform.scale(self.logo, [175, 175])
 
         self.font_200 = pg.font.Font("res/fonts/F1-regular.ttf", 200)
         self.font_100 = pg.font.Font("res/fonts/F1-regular.ttf", 100)
@@ -33,8 +38,14 @@ class Game:
 
         self.bg_color = (157, 206, 226)
         self.color_black = (0, 0, 0)
+        self.color_dark_grey = (67, 69, 74)
         self.color_red = (255, 0, 0)
         self.color_white = (255, 255, 255)
+        self.color_green = (0, 136, 0)
+
+        self.title_text = self.font_100.render("acing", False, self.color_black).convert()
+        self.credit_text = self.font_24.render("Game by Joshua (1092067) and Danny (1091749)", False,
+                                               self.color_white).convert()
 
         self.click_sound = pg.mixer.Sound("res/sfx/click.wav")
 
@@ -42,8 +53,8 @@ class Game:
         self.fps = 60
 
     def start(self):
-        play_button = pg.Rect((80, 500), (200, 100))
-        quit_button = pg.Rect((1000, 500), (200, 100))
+        play_button = pg.Rect((265, 375), (750, 100))
+        quit_button = pg.Rect((265, 500), (750, 100))
 
         while True:
             for event in pg.event.get():
@@ -71,22 +82,43 @@ class Game:
 
             # Render
             self.screen.fill(self.bg_color)
+
+            # Grass background
+            green_background = pg.Rect((0, 400), (self.screen.get_width(), 400))
+            pg.draw.rect(self.screen, self.color_green, green_background)
+
+            # Road
+            road_background = pg.Rect((340, 400), (600, 400))
+            pg.draw.rect(self.screen, self.color_black, road_background)
+            # Road side - Left
+            pg.draw.polygon(self.screen, self.color_black, ((340, 400), (340, 720), (250, 720)))
+            # Road side - Right
+            pg.draw.polygon(self.screen, self.color_black, ((940, 400), (940, 720), (1035, 720)))
+            # Road side wall - left
+            pg.draw.polygon(self.screen, self.color_red, ((340, 400), (250, 720), (210, 720), (300, 400)))
+            # Road side wall - right
+            pg.draw.polygon(self.screen, self.color_red, ((940, 400), (1035, 720), (1075, 720), (980, 400)))
+
             # Play button and text
-            pg.draw.rect(self.screen, self.color_black, play_button, border_radius=15)
+            pg.draw.rect(self.screen, self.color_dark_grey, play_button, border_radius=15)
             if play_button.collidepoint(pg.mouse.get_pos()):
                 play_text = self.font_50.render("Play", False, self.color_red).convert()
             else:
                 play_text = self.font_50.render("Play", False, self.color_white).convert()
             self.screen.blit(play_text, play_text.get_rect(center=(play_button.centerx, play_button.centery)))
             # Quit button and text
-            pg.draw.rect(self.screen, self.color_black, quit_button, border_radius=15)
+            pg.draw.rect(self.screen, self.color_dark_grey, quit_button, border_radius=15)
             if quit_button.collidepoint(pg.mouse.get_pos()):
                 quit_text = self.font_50.render("Quit", False, self.color_red).convert()
             else:
                 quit_text = self.font_50.render("Quit", False, self.color_white).convert()
             self.screen.blit(quit_text, quit_text.get_rect(center=(quit_button.centerx, quit_button.centery)))
             # Logo
-            self.screen.blit(self.logo, self.logo.get_rect(center=(self.window_width / 2, 300)))
+            self.screen.blit(self.logo_small, self.logo_small.get_rect(center=((self.window_width / 2) - 155, 92)))
+            # Title text
+            self.screen.blit(self.title_text, (540, 70))
+            # Credit text
+            self.screen.blit(self.credit_text, (300, 650))
             # PyGame Render
             pg.display.update()
             self.clock.tick(self.fps)
@@ -160,32 +192,42 @@ class Game:
                         self.state_stack.append("PAUSE")
                         self.pause()
                     elif event.key == pg.K_a:
-                        self.car_1.model = pygame.transform.rotate(self.car_1.model, self.car_1.rotation)
                         self.a_down = True
                     elif event.key == pg.K_d:
-                        self.car_1.model = pygame.transform.rotate(self.car_1.model, self.car_1.rotation)
                         self.d_down = True
+                    elif event.key == pg.K_w:
+                        self.w_down = True
                 elif event.type == pg.KEYUP:
                     if event.key == pg.K_a:
                         self.a_down = False
                     elif event.key == pg.K_d:
                         self.d_down = False
+                    elif event.key == pg.K_w:
+                        self.w_down = False
 
             # Update
-            if self.d_down:
-                self.car_1.rotation = (self.car_1.rotation + 1) % 360
-            elif self.a_down:
-                if self.car_1.rotation - 1 < 0:
-                    self.car_1.rotation = 359
+            if self.a_down:
+                self.player_car.rotation = (self.player_car.rotation + 1) % 360
+            elif self.d_down:
+                if self.player_car.rotation - 1 < 0:
+                    self.player_car.rotation = 359
                 else:
-                    self.car_1.rotation -= 1
+                    self.player_car.rotation -= 1
+            if self.w_down:
+                pass
+                # TODO: Move car
+                self.player_car.position[0] += math.cos(self.player_car.rotation)
+
+                self.player_car.position[1] += math.sin(self.player_car.rotation)
 
             # Render
-            print(self.car_1.rotation)
+            print(self.player_car.rotation)
             self.screen.fill(self.bg_color)
             self.screen.blit(game_text, game_text.get_rect(center=(self.window_width / 2, self.window_height / 2)))
 
-            self.screen.blit(self.car_1.model, self.car_1.model.get_rect(center=self.car_1.position))
+            # Draw the car
+            self.player_car.draw_to_screen(self.screen)
+            self.cpu_car.draw_to_screen(self.screen)
 
             pg.display.update()
             self.clock.tick(self.fps)
