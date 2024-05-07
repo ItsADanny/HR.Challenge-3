@@ -38,6 +38,7 @@ class Game:
         self.color_white = (255, 255, 255)
 
         self.title_text = self.font_100.render("acing", False, self.color_black).convert()
+        self.credit_text = self.font_24.render("Game by Joshua (1092067) and Danny (1091749)", False, self.color_black).convert()
 
         self.click_sound = pg.mixer.Sound("res/sfx/click.wav")
 
@@ -45,7 +46,7 @@ class Game:
         self.fps = 60
 
     def start(self):
-        play_button = pg.Rect((265, 350), (750, 100))
+        play_button = pg.Rect((265, 375), (750, 100))
         quit_button = pg.Rect((265, 500), (750, 100))
 
         while True:
@@ -92,6 +93,8 @@ class Game:
             self.screen.blit(self.logo_small, self.logo_small.get_rect(center=((self.window_width / 2) - 155, 92)))
             # Title text
             self.screen.blit(self.title_text, (540, 70))
+            # Credit text
+            self.screen.blit(self.credit_text, (300, 650))
             # PyGame Render
             pg.display.update()
             self.clock.tick(self.fps)
