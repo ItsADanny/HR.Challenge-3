@@ -47,19 +47,13 @@ class Game:
         self.credit_text = self.font_24.render("Game by Joshua (1092067) and Danny (1091749)", False,
                                                self.color_white).convert()
 
-        self.title_text = self.font_100.render("acing", False, self.color_black).convert()
-
         self.click_sound = pg.mixer.Sound("res/sfx/click.wav")
 
         self.clock = pg.time.Clock()
         self.fps = 60
 
     def start(self):
-<<<<<<< HEAD
         play_button = pg.Rect((265, 375), (750, 100))
-=======
-        play_button = pg.Rect((265, 350), (750, 100))
->>>>>>> eae8d53c3c171e42444e9f77530813e2406423b9
         quit_button = pg.Rect((265, 500), (750, 100))
 
         while True:
@@ -123,11 +117,8 @@ class Game:
             self.screen.blit(self.logo_small, self.logo_small.get_rect(center=((self.window_width / 2) - 155, 92)))
             # Title text
             self.screen.blit(self.title_text, (540, 70))
-<<<<<<< HEAD
             # Credit text
             self.screen.blit(self.credit_text, (300, 650))
-=======
->>>>>>> eae8d53c3c171e42444e9f77530813e2406423b9
             # PyGame Render
             pg.display.update()
             self.clock.tick(self.fps)
