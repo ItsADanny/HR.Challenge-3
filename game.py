@@ -24,6 +24,7 @@ class Game:
         self.state_stack = []
 
         self.logo = pg.image.load("res/textures/logo.png")
+        self.logo_small = pg.transform.scale(self.logo, [175, 175])
 
         self.font_200 = pg.font.Font("res/fonts/F1-regular.ttf", 200)
         self.font_100 = pg.font.Font("res/fonts/F1-regular.ttf", 100)
@@ -36,14 +37,16 @@ class Game:
         self.color_red = (255, 0, 0)
         self.color_white = (255, 255, 255)
 
+        self.title_text = self.font_100.render("acing", False, self.color_black).convert()
+
         self.click_sound = pg.mixer.Sound("res/sfx/click.wav")
 
         self.clock = pg.time.Clock()
         self.fps = 60
 
     def start(self):
-        play_button = pg.Rect((80, 500), (200, 100))
-        quit_button = pg.Rect((1000, 500), (200, 100))
+        play_button = pg.Rect((265, 350), (750, 100))
+        quit_button = pg.Rect((265, 500), (750, 100))
 
         while True:
             for event in pg.event.get():
@@ -86,7 +89,9 @@ class Game:
                 quit_text = self.font_50.render("Quit", False, self.color_white).convert()
             self.screen.blit(quit_text, quit_text.get_rect(center=(quit_button.centerx, quit_button.centery)))
             # Logo
-            self.screen.blit(self.logo, self.logo.get_rect(center=(self.window_width / 2, 300)))
+            self.screen.blit(self.logo_small, self.logo_small.get_rect(center=((self.window_width / 2) - 155, 92)))
+            # Title text
+            self.screen.blit(self.title_text, (540, 70))
             # PyGame Render
             pg.display.update()
             self.clock.tick(self.fps)
