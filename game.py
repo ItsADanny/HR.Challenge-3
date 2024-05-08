@@ -13,10 +13,10 @@ class Game:
         pg.display.set_caption(title)
         # pg.display.set_icon(pg.image.load("res/icon.png"))
 
-        self.player_car = Car(pg.transform.scale(pg.image.load("res/textures/car_merc.png"), (100, 35)).convert_alpha(),
-                              [200, 200])
-        self.cpu_car = Car(pg.transform.scale(pg.image.load("res/textures/car_alfa.png"), (100, 35)).convert_alpha(),
-                           [500, 200])
+        self.player = Car(pg.transform.scale(pg.image.load("res/textures/car_merc.png"), (100, 35)).convert_alpha(),
+                          [200, 200])
+        self.computer = Car(pg.transform.scale(pg.image.load("res/textures/car_alfa.png"), (100, 35)).convert_alpha(),
+                            [500, 200])
 
         self.a_down = False
         self.d_down = False
@@ -207,27 +207,27 @@ class Game:
 
             # Update
             if self.a_down:
-                self.player_car.rotation = (self.player_car.rotation + 1) % 360
+                self.player.rotation = (self.player.rotation + self.player.rotation_speed) % 360
             elif self.d_down:
-                if self.player_car.rotation - 1 < 0:
-                    self.player_car.rotation = 359
+                if self.player.rotation - self.player.rotation_speed < 0:
+                    self.player.rotation = 360.0 - self.player.rotation_speed
                 else:
-                    self.player_car.rotation -= 1
+                    self.player.rotation -= self.player.rotation_speed
             if self.w_down:
                 pass
-                # TODO: Move car
-                self.player_car.position[0] += math.cos(self.player_car.rotation)
-
-                self.player_car.position[1] += math.sin(self.player_car.rotation)
+                self.player.position[0] -= self.player.velocity * math.cos(self.player.rotation / 180 * math.pi)
+                self.player.position[1] += self.player.velocity * math.sin(self.player.rotation / 180 * math.pi)
 
             # Render
-            print(self.player_car.rotation)
+
             self.screen.fill(self.bg_color)
             self.screen.blit(game_text, game_text.get_rect(center=(self.window_width / 2, self.window_height / 2)))
 
             # Draw the car
-            self.player_car.draw_to_screen(self.screen)
-            self.cpu_car.draw_to_screen(self.screen)
+            self.player.render(self.screen)
+            self.computer.render(self.screen)
+            # print(f"{self.player_car.rotation} {math.cos(self.player_car.rotation / 180 * math.pi)}")
+            # print(f"{self.player_car.rotation} {math.sin(self.player_car.rotation / 180 * math.pi)}")
 
             pg.display.update()
             self.clock.tick(self.fps)
