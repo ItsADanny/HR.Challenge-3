@@ -21,6 +21,7 @@ class Game:
         self.a_down = False
         self.d_down = False
         self.w_down = False
+        self.s_down = False
 
         # Game logic variables
         self.window_width = width
@@ -197,6 +198,8 @@ class Game:
                         self.d_down = True
                     elif event.key == pg.K_w:
                         self.w_down = True
+                    elif event.key == pg.K_s:
+                        self.s_down = True
                 elif event.type == pg.KEYUP:
                     if event.key == pg.K_a:
                         self.a_down = False
@@ -204,19 +207,25 @@ class Game:
                         self.d_down = False
                     elif event.key == pg.K_w:
                         self.w_down = False
+                    elif event.key == pg.K_s:
+                        self.s_down = False
 
             # Update
             if self.a_down:
-                self.player.rotation = (self.player.rotation + self.player.rotation_speed) % 360
+                if self.w_down or self.s_down:  # Can only turn when moving forwards or backwards
+                    self.player.rotation = (self.player.rotation + self.player.rotation_speed) % 360
             elif self.d_down:
-                if self.player.rotation - self.player.rotation_speed < 0:
-                    self.player.rotation = 360.0 - self.player.rotation_speed
-                else:
-                    self.player.rotation -= self.player.rotation_speed
+                if self.w_down or self.s_down:  # Can only turn when moving forwards or backwards
+                    if self.player.rotation - self.player.rotation_speed < 0:
+                        self.player.rotation = 360.0 - self.player.rotation_speed
+                    else:
+                        self.player.rotation -= self.player.rotation_speed
             if self.w_down:
-                pass
                 self.player.position[0] -= self.player.velocity * math.cos(self.player.rotation / 180 * math.pi)
                 self.player.position[1] += self.player.velocity * math.sin(self.player.rotation / 180 * math.pi)
+            elif self.s_down:
+                self.player.position[0] += self.player.velocity * math.cos(self.player.rotation / 180 * math.pi)
+                self.player.position[1] -= self.player.velocity * math.sin(self.player.rotation / 180 * math.pi)
 
             # Render
 
