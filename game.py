@@ -153,12 +153,28 @@ class Game:
             # Update
 
             # Render
-
             self.screen.fill(self.bg_color)
+
+            # Grass background
+            green_background = pg.Rect((0, 400), (self.screen.get_width(), 400))
+            pg.draw.rect(self.screen, self.color_green, green_background)
+
+            # Road
+            road_background = pg.Rect((340, 400), (600, 400))
+            pg.draw.rect(self.screen, self.color_black, road_background)
+            # Road side - Left
+            pg.draw.polygon(self.screen, self.color_black, ((340, 400), (340, 720), (250, 720)))
+            # Road side - Right
+            pg.draw.polygon(self.screen, self.color_black, ((940, 400), (940, 720), (1035, 720)))
+            # Road side wall - left
+            pg.draw.polygon(self.screen, self.color_red, ((340, 400), (250, 720), (210, 720), (300, 400)))
+            # Road side wall - right
+            pg.draw.polygon(self.screen, self.color_red, ((940, 400), (1035, 720), (1075, 720), (980, 400)))
+
             # Paused text
-            self.screen.blit(paused_text, paused_text.get_rect(center=(self.window_width / 2, 75)))
+            self.screen.blit(paused_text, paused_text.get_rect(center=(self.window_width / 2, 200)))
             # Return button
-            pg.draw.rect(self.screen, self.color_black, return_button, border_radius=15)
+            pg.draw.rect(self.screen, self.color_dark_grey, return_button, border_radius=15)
             if return_button.collidepoint(pg.mouse.get_pos()):
                 return_text = self.font_50.render("Return", False, self.color_red).convert()
             else:
@@ -166,7 +182,7 @@ class Game:
             self.screen.blit(return_text,
                              return_text.get_rect(center=(return_button.centerx, return_button.centery)))
             # Quit button
-            pg.draw.rect(self.screen, self.color_black, quit_button, border_radius=15)
+            pg.draw.rect(self.screen, self.color_dark_grey, quit_button, border_radius=15)
             if quit_button.collidepoint(pg.mouse.get_pos()):
                 quit_text = self.font_50.render("Quit", False, self.color_red).convert()
             else:
@@ -174,8 +190,12 @@ class Game:
             self.screen.blit(quit_text, quit_text.get_rect(center=(quit_button.centerx, quit_button.centery)))
 
             # Game icon
-            self.screen.blit(self.logo,
-                             self.logo.get_rect(center=(self.window_width / 2, self.window_height / 2)))
+            # self.screen.blit(self.logo,
+            #                  self.logo.get_rect(center=(self.window_width / 2, self.window_height / 2)))
+            # Logo
+            self.screen.blit(self.logo_small, self.logo_small.get_rect(center=((self.window_width / 2) - 155, 92)))
+            # Title text
+            self.screen.blit(self.title_text, (540, 70))
             # PyGame Render
             pg.display.update()
             self.clock.tick(self.fps)
