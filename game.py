@@ -13,9 +13,9 @@ class Game:
         pg.display.set_caption(title)
         # pg.display.set_icon(pg.image.load("res/icon.png"))
 
-        self.player = Car(pg.transform.scale(pg.image.load("res/textures/car_merc.png"), (100, 35)).convert_alpha(),
-                          [200, 200])
-        self.computer = Car(pg.transform.scale(pg.image.load("res/textures/car_alfa.png"), (100, 35)).convert_alpha(),
+        self.player = Car(pg.transform.scale(pg.image.load("res/textures/car_merc.png"), (80, 28)).convert_alpha(),
+                          [600, 300])
+        self.computer = Car(pg.transform.scale(pg.image.load("res/textures/car_alfa.png"), (80, 28)).convert_alpha(),
                             [500, 200])
 
         self.a_down = False
@@ -39,6 +39,7 @@ class Game:
 
         self.bg_color = (157, 206, 226)
         self.color_black = (0, 0, 0)
+        self.color_gray = (30, 30, 30)
         self.color_dark_grey = (67, 69, 74)
         self.color_red = (255, 0, 0)
         self.color_white = (255, 255, 255)
@@ -232,23 +233,33 @@ class Game:
 
             # Update
             if self.a_down:
-                if self.w_down or self.s_down:  # Can only turn when moving forwards or backwards
+                if self.player.velocity != 0.0:  # Can only turn when moving forwards or backwards
                     self.player.rotation = (self.player.rotation + self.player.rotation_speed) % 360
             elif self.d_down:
-                if self.w_down or self.s_down:  # Can only turn when moving forwards or backwards
+                if self.player.velocity != 0.0:  # Can only turn when moving forwards or backwards
                     if self.player.rotation - self.player.rotation_speed < 0:
                         self.player.rotation = 360.0 - self.player.rotation_speed
                     else:
                         self.player.rotation -= self.player.rotation_speed
             if self.w_down:
+                self.player.acceleration = self.player.max_acceleration
+                self.player.velocity = min(self.player.velocity + self.player.acceleration, self.player.max_velocity)
+                self.player.position[0] -= self.player.velocity * math.cos(self.player.rotation / 180 * math.pi)
+                self.player.position[1] += self.player.velocity * math.sin(self.player.rotation / 180 * math.pi)
+            elif not self.s_down:
+                self.player.acceleration = self.player.min_acceleration
+                self.player.velocity = max(self.player.velocity + self.player.acceleration, 0)
                 self.player.position[0] -= self.player.velocity * math.cos(self.player.rotation / 180 * math.pi)
                 self.player.position[1] += self.player.velocity * math.sin(self.player.rotation / 180 * math.pi)
             elif self.s_down:
-                self.player.position[0] += self.player.velocity * math.cos(self.player.rotation / 180 * math.pi)
-                self.player.position[1] -= self.player.velocity * math.sin(self.player.rotation / 180 * math.pi)
+                self.player.acceleration = self.player.max_acceleration
+                self.player.velocity = max(self.player.velocity - self.player.acceleration, self.player.max_backwards_velocity)
+                self.player.position[0] -= self.player.velocity * math.cos(self.player.rotation / 180 * math.pi)
+                self.player.position[1] += self.player.velocity * math.sin(self.player.rotation / 180 * math.pi)
+            # The player cannot turn at full capacity when not going fast
+            self.player.rotation_speed = self.player.velocity * 0.5
 
             # Render
-
             self.screen.fill(self.bg_color)
             self.screen.blit(game_text, game_text.get_rect(center=(self.window_width / 2, 50)))
 
@@ -258,20 +269,19 @@ class Game:
             pg.draw.rect(self.screen, self.color_green, map_grass)
             # Road
             map_road = pg.Rect((300, 270), (660, 400))
-            pg.draw.rect(self.screen, self.color_black, map_road)
-            pg.draw.circle(self.screen, self.color_black, (300, 470), 200)
-            pg.draw.circle(self.screen, self.color_black, (960, 470), 200)
+            pg.draw.rect(self.screen, self.color_gray, map_road)
+            pg.draw.circle(self.screen, self.color_gray, (300, 470), 200)
+            pg.draw.circle(self.screen, self.color_gray, (960, 470), 200)
             # Pit Lane
             map_pitlane = pg.Rect((400, 150), (450, 100))
-            pg.draw.rect(self.screen, self.color_black, map_pitlane)
-            pg.draw.polygon(self.screen, self.color_black, ((400, 150), (195, 300), (300, 400), (400, 250)))
-            pg.draw.polygon(self.screen, self.color_black, ((850, 150), (850, 250), (965, 400), (1065, 300)))
+            pg.draw.rect(self.screen, self.color_gray, map_pitlane)
+            pg.draw.polygon(self.screen, self.color_gray, ((400, 150), (195, 300), (300, 400), (400, 250)))
+            pg.draw.polygon(self.screen, self.color_gray, ((850, 150), (850, 250), (965, 400), (1065, 300)))
             # Center grass
             map_grass = pg.Rect((360, 420), (550, 100))
             pg.draw.rect(self.screen, self.color_green, map_grass)
             pg.draw.circle(self.screen, self.color_green, (360, 470), 50)
             pg.draw.circle(self.screen, self.color_green, (900, 470), 50)
-
 
             # Draw the car
             self.player.render(self.screen)

@@ -8,7 +8,13 @@ class Car(pg.sprite.Sprite):
         self.tire_type: int = 1  # 0=soft 1=medium 2=hard
         self.position: list = position
         self.rotation: float = 0.0  # 0-359
-        self.velocity: float = 2.0
+
+        self.acceleration: float = 0
+        self.max_acceleration: float = 0.03
+        self.min_acceleration: float = -0.1
+        self.velocity: float = 0.0
+        self.max_velocity: float = 5.0
+        self.max_backwards_velocity = -3.0
         self.rotation_speed: float = 2.0
 
     def render(self, screen: pg.Surface):
