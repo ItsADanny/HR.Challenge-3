@@ -230,7 +230,28 @@ class Game:
             # Render
 
             self.screen.fill(self.bg_color)
-            self.screen.blit(game_text, game_text.get_rect(center=(self.window_width / 2, self.window_height / 2)))
+            self.screen.blit(game_text, game_text.get_rect(center=(self.window_width / 2, 50)))
+
+            # Game map
+            # Grass
+            map_grass = pg.Rect((0, 120), (self.screen.get_width(), 600))
+            pg.draw.rect(self.screen, self.color_green, map_grass)
+            # Road
+            map_road = pg.Rect((300, 270), (660, 400))
+            pg.draw.rect(self.screen, self.color_black, map_road)
+            pg.draw.circle(self.screen, self.color_black, (300, 470), 200)
+            pg.draw.circle(self.screen, self.color_black, (960, 470), 200)
+            # Pit Lane
+            map_pitlane = pg.Rect((400, 150), (450, 100))
+            pg.draw.rect(self.screen, self.color_black, map_pitlane)
+            pg.draw.polygon(self.screen, self.color_black, ((400, 150), (195, 300), (300, 400), (400, 250)))
+            pg.draw.polygon(self.screen, self.color_black, ((850, 150), (850, 250), (965, 400), (1065, 300)))
+            # Center grass
+            map_grass = pg.Rect((360, 420), (550, 100))
+            pg.draw.rect(self.screen, self.color_green, map_grass)
+            pg.draw.circle(self.screen, self.color_green, (360, 470), 50)
+            pg.draw.circle(self.screen, self.color_green, (900, 470), 50)
+
 
             # Draw the car
             self.player.render(self.screen)
