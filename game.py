@@ -44,6 +44,10 @@ class Game:
         self.color_red = (255, 0, 0)
         self.color_white = (255, 255, 255)
         self.color_green = (0, 136, 0)
+        self.color_orange = (255, 140, 90)
+        self.color_yellow = (255, 222, 89)
+        self.color_yellowish_green = (201, 219, 0)
+
 
         self.title_text = self.font_100.render("acing", False, self.color_black).convert()
         self.credit_text = self.font_24.render("Game by Joshua (1092067) and Danny (1091749)", False,
@@ -282,6 +286,50 @@ class Game:
             pg.draw.rect(self.screen, self.color_green, map_grass)
             pg.draw.circle(self.screen, self.color_green, (360, 470), 50)
             pg.draw.circle(self.screen, self.color_green, (900, 470), 50)
+
+            # Game UI Background
+            ui_bg = pg.Rect((0, 0), (self.screen.get_width(), 120))
+            pg.draw.rect(self.screen, self.color_dark_grey, ui_bg)
+            # Game UI Splitter
+            ui_splitter = pg.Rect((0, 120), (self.screen.get_width(), 10))
+            pg.draw.rect(self.screen, self.color_gray, ui_splitter)
+
+            # Game UI background for: Tire health, Current tire, Current Speed and Current position
+            ui_current_tire_health_bg = pg.Rect((10, 40), (230, 70))
+            pg.draw.rect(self.screen, self.color_black, ui_current_tire_health_bg)
+            ui_current_tire_bg = pg.Rect((250, 40), (230, 70))
+            pg.draw.rect(self.screen, self.color_black, ui_current_tire_bg)
+            ui_current_speed_bg = pg.Rect((490, 40), (230, 70))
+            pg.draw.rect(self.screen, self.color_black, ui_current_speed_bg)
+            ui_current_position_bg = pg.Rect((1040, 40), (230, 70))
+            pg.draw.rect(self.screen, self.color_black, ui_current_position_bg)
+
+            # Game UI text for: Tire health, Current tire, Current Speed and Current position
+            ui_current_tire_health_text = self.font_24.render("Tire Health", False, self.color_white).convert()
+            ui_current_tire_text = self.font_24.render("Current Tire", False, self.color_white).convert()
+            ui_current_speed_text = self.font_24.render("Speed", False, self.color_white).convert()
+            ui_current_position_text = self.font_24.render("Position", False, self.color_white).convert()
+            self.screen.blit(ui_current_tire_health_text, (10, 10))
+            self.screen.blit(ui_current_tire_text, (250, 10))
+            self.screen.blit(ui_current_speed_text, (490, 10))
+            self.screen.blit(ui_current_position_text, (1040, 10))
+
+            # Game UI: Tire Health (Health bars)
+            # 20%
+            ui_tire_health_20 = pg.Rect((15, 45), (40, 60))
+            pg.draw.rect(self.screen, self.color_red, ui_tire_health_20)
+            # 40%
+            ui_tire_health_40 = pg.Rect((60, 45), (40, 60))
+            pg.draw.rect(self.screen, self.color_orange, ui_tire_health_40)
+            # 60%
+            ui_tire_health_60 = pg.Rect((105, 45), (40, 60))
+            pg.draw.rect(self.screen, self.color_yellow, ui_tire_health_60)
+            # 80%
+            ui_tire_health_80 = pg.Rect((150, 45), (40, 60))
+            pg.draw.rect(self.screen, self.color_yellowish_green, ui_tire_health_80)
+            # 100%
+            ui_tire_health_100 = pg.Rect((195, 45), (40, 60))
+            pg.draw.rect(self.screen, self.color_green, ui_tire_health_100)
 
             # Draw the car
             self.player.render(self.screen)
