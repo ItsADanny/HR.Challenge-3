@@ -13,9 +13,9 @@ class Game:
         pg.display.set_caption(title)
         # pg.display.set_icon(pg.image.load("res/icon.png"))
 
-        self.player = Car(pg.transform.scale(pg.image.load("res/textures/car_merc.png"), (80, 28)).convert_alpha(),
+        self.player = Car(pg.transform.scale(pg.image.load("res/textures/car_merc.png"), (60, 21)).convert_alpha(),
                           [600, 300])
-        self.computer = Car(pg.transform.scale(pg.image.load("res/textures/car_alfa.png"), (80, 28)).convert_alpha(),
+        self.computer = Car(pg.transform.scale(pg.image.load("res/textures/car_alfa.png"), (60, 21)).convert_alpha(),
                             [500, 200])
 
         self.a_down = False
@@ -196,7 +196,7 @@ class Game:
 
             # Game icon
             # self.screen.blit(self.logo,
-            #                  self.logo.get_rect(center=(self.window_width / 2, self.window_height / 2)))
+            # self.logo.get_rect(center=(self.window_width / 2, self.window_height / 2)))
             # Logo
             self.screen.blit(self.logo_small, self.logo_small.get_rect(center=((self.window_width / 2) - 155, 92)))
             # Title text
@@ -206,7 +206,22 @@ class Game:
             self.clock.tick(self.fps)
 
     def game(self):
-        game_text = self.font_50.render("Game", False, self.color_black).convert()
+        ui_tire_health_20 = pg.Rect((15, 45), (40, 60))
+        ui_tire_health_40 = pg.Rect((60, 45), (40, 60))
+        ui_tire_health_60 = pg.Rect((105, 45), (40, 60))
+        ui_tire_health_80 = pg.Rect((150, 45), (40, 60))
+        ui_tire_health_100 = pg.Rect((195, 45), (40, 60))
+        
+        ui_current_tire_health_bg = pg.Rect((10, 40), (230, 70))
+        ui_current_tire_bg = pg.Rect((250, 40), (230, 70))
+        ui_current_speed_bg = pg.Rect((490, 40), (230, 70))
+        ui_current_position_bg = pg.Rect((1040, 40), (230, 70))
+
+        ui_current_tire_health_text = self.font_24.render("Tire Health", False, self.color_white).convert()
+        ui_current_tire_text = self.font_24.render("Current Tire", False, self.color_white).convert()
+        ui_current_speed_text = self.font_24.render("Speed (km/h)", False, self.color_white).convert()
+        ui_current_position_text = self.font_24.render("Position", False, self.color_white).convert()
+
         while self.state_stack[-1] == "GAME":
             for event in pg.event.get():
                 if event.type == pg.QUIT:
@@ -245,27 +260,30 @@ class Game:
                         self.player.rotation = 360.0 - self.player.rotation_speed
                     else:
                         self.player.rotation -= self.player.rotation_speed
-            if self.w_down:
+
+            if self.w_down:  # Accelerate forwards when W is held down
                 self.player.acceleration = self.player.max_acceleration
                 self.player.velocity = min(self.player.velocity + self.player.acceleration, self.player.max_velocity)
-                self.player.position[0] -= self.player.velocity * math.cos(self.player.rotation / 180 * math.pi)
-                self.player.position[1] += self.player.velocity * math.sin(self.player.rotation / 180 * math.pi)
-            elif not self.s_down:
+            elif self.s_down:  # Accelerate backwards when S is held down
                 self.player.acceleration = self.player.min_acceleration
-                self.player.velocity = max(self.player.velocity + self.player.acceleration, 0)
-                self.player.position[0] -= self.player.velocity * math.cos(self.player.rotation / 180 * math.pi)
-                self.player.position[1] += self.player.velocity * math.sin(self.player.rotation / 180 * math.pi)
-            elif self.s_down:
-                self.player.acceleration = self.player.max_acceleration
-                self.player.velocity = max(self.player.velocity - self.player.acceleration, self.player.max_backwards_velocity)
-                self.player.position[0] -= self.player.velocity * math.cos(self.player.rotation / 180 * math.pi)
-                self.player.position[1] += self.player.velocity * math.sin(self.player.rotation / 180 * math.pi)
-            # The player cannot turn at full capacity when not going fast
-            self.player.rotation_speed = self.player.velocity * 0.5
+                self.player.velocity = max(self.player.velocity + self.player.acceleration, self.player.max_backwards_velocity)
+            else:  # Slow down when neither W nor S are held down
+                if -0.1 < self.player.velocity < 0.1:
+                    self.player.acceleration = 0.0
+                    self.player.velocity = 0.0
+                elif self.player.velocity > 0.1:  # If player is moving forwards
+                    self.player.acceleration = self.player.min_acceleration
+                else:  # If player is moving backwards
+                    self.player.acceleration = self.player.max_acceleration
+                self.player.velocity = self.player.velocity + self.player.acceleration
+            self.player.position[0] -= self.player.velocity * math.cos(self.player.rotation / 180 * math.pi)
+            self.player.position[1] += self.player.velocity * math.sin(self.player.rotation / 180 * math.pi)
+
+            # The player cannot turn at full capacity when not going fast, the turning speed is dependent on the velocity
+            self.player.rotation_speed = min(self.player.velocity * 0.5, self.player.max_rotation_speed)
 
             # Render
             self.screen.fill(self.bg_color)
-            self.screen.blit(game_text, game_text.get_rect(center=(self.window_width / 2, 50)))
 
             # Game map
             # Grass
@@ -295,20 +313,13 @@ class Game:
             pg.draw.rect(self.screen, self.color_gray, ui_splitter)
 
             # Game UI background for: Tire health, Current tire, Current Speed and Current position
-            ui_current_tire_health_bg = pg.Rect((10, 40), (230, 70))
+            
             pg.draw.rect(self.screen, self.color_black, ui_current_tire_health_bg)
-            ui_current_tire_bg = pg.Rect((250, 40), (230, 70))
             pg.draw.rect(self.screen, self.color_black, ui_current_tire_bg)
-            ui_current_speed_bg = pg.Rect((490, 40), (230, 70))
             pg.draw.rect(self.screen, self.color_black, ui_current_speed_bg)
-            ui_current_position_bg = pg.Rect((1040, 40), (230, 70))
             pg.draw.rect(self.screen, self.color_black, ui_current_position_bg)
 
             # Game UI text for: Tire health, Current tire, Current Speed and Current position
-            ui_current_tire_health_text = self.font_24.render("Tire Health", False, self.color_white).convert()
-            ui_current_tire_text = self.font_24.render("Current Tire", False, self.color_white).convert()
-            ui_current_speed_text = self.font_24.render("Speed", False, self.color_white).convert()
-            ui_current_position_text = self.font_24.render("Position", False, self.color_white).convert()
             self.screen.blit(ui_current_tire_health_text, (10, 10))
             self.screen.blit(ui_current_tire_text, (250, 10))
             self.screen.blit(ui_current_speed_text, (490, 10))
@@ -316,20 +327,18 @@ class Game:
 
             # Game UI: Tire Health (Health bars)
             # 20%
-            ui_tire_health_20 = pg.Rect((15, 45), (40, 60))
             pg.draw.rect(self.screen, self.color_red, ui_tire_health_20)
             # 40%
-            ui_tire_health_40 = pg.Rect((60, 45), (40, 60))
             pg.draw.rect(self.screen, self.color_orange, ui_tire_health_40)
             # 60%
-            ui_tire_health_60 = pg.Rect((105, 45), (40, 60))
             pg.draw.rect(self.screen, self.color_yellow, ui_tire_health_60)
             # 80%
-            ui_tire_health_80 = pg.Rect((150, 45), (40, 60))
             pg.draw.rect(self.screen, self.color_yellowish_green, ui_tire_health_80)
             # 100%
-            ui_tire_health_100 = pg.Rect((195, 45), (40, 60))
             pg.draw.rect(self.screen, self.color_green, ui_tire_health_100)
+
+            # The actual speed display
+            self.screen.blit(self.font_40.render(f"{int(self.player.velocity * 20)}", False, self.color_white).convert(), (500, 56))
 
             # Draw the car
             self.player.render(self.screen)
