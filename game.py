@@ -48,7 +48,6 @@ class Game:
         self.color_yellow = (255, 222, 89)
         self.color_yellowish_green = (201, 219, 0)
 
-
         self.title_text = self.font_100.render("acing", False, self.color_black).convert()
         self.credit_text = self.font_24.render("Game by Joshua (1092067) and Danny (1091749)", False,
                                                self.color_white).convert()
@@ -222,6 +221,14 @@ class Game:
         ui_current_speed_text = self.font_24.render("Speed (km/h)", False, self.color_white).convert()
         ui_current_position_text = self.font_24.render("Position", False, self.color_white).convert()
 
+        ui_tire_soft = pg.transform.scale(pg.image.load("res/textures/tire_soft.png"), (64, 64))
+        ui_tire_medium = pg.transform.scale(pg.image.load("res/textures/tire_medium.png"), (64, 64))
+        ui_tire_hard = pg.transform.scale(pg.image.load("res/textures/tire_hard.png"), (64, 64))
+
+        ui_tire_soft_text = self.font_24.render("S", False, (255, 0, 0)).convert()
+        ui_tire_medium_text = self.font_24.render("M", False, (221, 179, 0)).convert()
+        ui_tire_hard_text = self.font_24.render("H", False, (255, 107, 0)).convert()
+
         while self.state_stack[-1] == "GAME":
             for event in pg.event.get():
                 if event.type == pg.QUIT:
@@ -313,17 +320,26 @@ class Game:
             pg.draw.rect(self.screen, self.color_gray, ui_splitter)
 
             # Game UI background for: Tire health, Current tire, Current Speed and Current position
-            
             pg.draw.rect(self.screen, self.color_black, ui_current_tire_health_bg)
             pg.draw.rect(self.screen, self.color_black, ui_current_tire_bg)
             pg.draw.rect(self.screen, self.color_black, ui_current_speed_bg)
             pg.draw.rect(self.screen, self.color_black, ui_current_position_bg)
 
-            # Game UI text for: Tire health, Current tire, Current Speed and Current position
+            # Game UI text for: Tire health, Current tire, Current Speed, Current position and Current tire
             self.screen.blit(ui_current_tire_health_text, (10, 10))
             self.screen.blit(ui_current_tire_text, (250, 10))
             self.screen.blit(ui_current_speed_text, (490, 10))
             self.screen.blit(ui_current_position_text, (1040, 10))
+
+            if self.player.tire_type == 0:  # Soft tires
+                self.screen.blit(ui_tire_soft, (335, 42))
+                self.screen.blit(ui_tire_soft_text, (358, 61))
+            elif self.player.tire_type == 1:  # Medium tires
+                self.screen.blit(ui_tire_medium, (335, 42))
+                self.screen.blit(ui_tire_medium_text, (353, 60))
+            else:  # Hard tires
+                self.screen.blit(ui_tire_hard, (335, 42))
+                self.screen.blit(ui_tire_hard_text, (356, 61))
 
             # Game UI: Tire Health (Health bars)
             # 20%
