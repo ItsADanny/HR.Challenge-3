@@ -10,13 +10,15 @@ class Car(pg.sprite.Sprite):
         self.rotation: float = 0.0  # 0-359
 
         self.acceleration: float = 0
-        self.max_acceleration: float = 0.05
-        self.min_acceleration: float = -0.02
+        self.max_acceleration: float = 0.05  # Forwards acceleration
+        self.min_acceleration: float = -0.1  # Backwards acceleration, also acts as braking force
+        self.drag: float = -0.02  # Tire drag, causes slowdown when not holding accelerator
         self.velocity: float = 0.0
         self.max_velocity: float = 20.0
         self.max_backwards_velocity = -3.0
         self.rotation_speed: float = 0.0
         self.max_rotation_speed: float = 2.0
+        self.distance_driven: float = 0.0  # The distance driven with the current tires, used for tire health
 
     def render(self, screen: pg.Surface):
         rotated_model = pg.transform.rotate(self.image, self.rotation)

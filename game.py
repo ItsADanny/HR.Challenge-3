@@ -280,7 +280,7 @@ class Game:
                     self.player.acceleration = 0.0
                     self.player.velocity = 0.0
                 elif self.player.velocity > 0.1:  # If player is moving forwards
-                    self.player.acceleration = self.player.min_acceleration
+                    self.player.acceleration = self.player.drag
                 else:  # If player is moving backwards
                     self.player.acceleration = self.player.max_acceleration
                 self.player.velocity = self.player.velocity + self.player.acceleration
@@ -289,6 +289,10 @@ class Game:
 
             # The player cannot turn at full capacity when not going fast, the turning speed is dependent on the velocity
             self.player.rotation_speed = min(self.player.velocity * 0.5, self.player.max_rotation_speed)
+
+            # Update the distance driven with the current tires
+            self.player.distance_driven += abs(self.player.velocity)
+            # print(self.player.distance_driven)
 
             # Render
             self.screen.fill(self.bg_color)
