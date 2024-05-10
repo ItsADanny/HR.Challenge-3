@@ -290,20 +290,20 @@ class Game:
             map_grass = pg.Rect((0, 120), (self.screen.get_width(), 600))
             pg.draw.rect(self.screen, self.color_green, map_grass)
             # Road
-            map_road = pg.Rect((300, 270), (660, 400))
+            map_road = pg.Rect((300, 270), (660, 430))
             pg.draw.rect(self.screen, self.color_gray, map_road)
-            pg.draw.circle(self.screen, self.color_gray, (300, 470), 200)
-            pg.draw.circle(self.screen, self.color_gray, (960, 470), 200)
+            pg.draw.circle(self.screen, self.color_gray, (300, 480), 220)
+            pg.draw.circle(self.screen, self.color_gray, (960, 480), 220)
             # Pit Lane
             map_pitlane = pg.Rect((400, 150), (450, 100))
             pg.draw.rect(self.screen, self.color_gray, map_pitlane)
             pg.draw.polygon(self.screen, self.color_gray, ((400, 150), (195, 300), (300, 400), (400, 250)))
             pg.draw.polygon(self.screen, self.color_gray, ((850, 150), (850, 250), (965, 400), (1065, 300)))
             # Center grass
-            map_grass = pg.Rect((360, 420), (550, 100))
+            map_grass = pg.Rect((360, 410), (550, 140))
             pg.draw.rect(self.screen, self.color_green, map_grass)
-            pg.draw.circle(self.screen, self.color_green, (360, 470), 50)
-            pg.draw.circle(self.screen, self.color_green, (900, 470), 50)
+            pg.draw.circle(self.screen, self.color_green, (360, 480), 70)
+            pg.draw.circle(self.screen, self.color_green, (900, 480), 70)
 
             # Game UI Background
             ui_bg = pg.Rect((0, 0), (self.screen.get_width(), 120))
