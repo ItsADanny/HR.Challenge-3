@@ -36,6 +36,7 @@ class Game:
         self.font_50 = pg.font.Font("res/fonts/F1-regular.ttf", 50)
         self.font_40 = pg.font.Font("res/fonts/F1-regular.ttf", 40)
         self.font_24 = pg.font.Font("res/fonts/F1-regular.ttf", 25)
+        self.font_12 = pg.font.Font("res/fonts/F1-regular.ttf", 12)
 
         self.bg_color = (157, 206, 226)
         self.color_black = (0, 0, 0)
@@ -306,6 +307,15 @@ class Game:
             pg.draw.rect(self.screen, self.color_gray, map_pitlane)
             pg.draw.polygon(self.screen, self.color_gray, ((400, 150), (195, 300), (300, 400), (400, 250)))
             pg.draw.polygon(self.screen, self.color_gray, ((850, 150), (850, 250), (965, 400), (1065, 300)))
+            # Pitstop location
+            map_pitstop_white_bg = pg.Rect((575, 170), (100, 60))
+            pg.draw.rect(self.screen, self.color_white, map_pitstop_white_bg)
+            map_pitstop_grey_bg = pg.Rect((590, 170), (70, 80))
+            pg.draw.rect(self.screen, self.color_gray, map_pitstop_grey_bg)
+            map_pitstop_field = pg.Rect((585, 180), (80, 40))
+            pg.draw.rect(self.screen, self.color_red, map_pitstop_field)
+            pitstop_text = self.font_12.render("Pitstop", False, self.color_white).convert()
+            self.screen.blit(pitstop_text, pitstop_text.get_rect(center=(map_pitstop_field.centerx, map_pitstop_field.centery)))
             # Center grass
             map_grass = pg.Rect((360, 410), (550, 140))
             pg.draw.rect(self.screen, self.color_green, map_grass)
