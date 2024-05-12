@@ -1,7 +1,9 @@
 import pygame as pg
 import math
+import random
 
 from car import Car
+from tire import Tire
 
 
 class Game:
@@ -13,20 +15,26 @@ class Game:
         pg.display.set_caption(title)
         # pg.display.set_icon(pg.image.load("res/icon.png"))
 
+        self.soft_tires = Tire("SOFT", 10000.0, 12.5, -3.0, 0.05, -0.1, -0.02, 2.0)
+        self.medium_tires = Tire("MEDIUM", 15000.0, 10, -2.0, 0.035, -0.08, -0.04, 1.75)
+        self.hard_tires = Tire("HARD", 20000.0, 7.5, -1.0, 0.02, -0.06, -0.06, 1.5)
+
+        # Game variables
         self.player = Car(pg.transform.scale(pg.image.load("res/textures/car_merc.png"), (60, 21)).convert_alpha(),
-                          [600, 300])
+                          [620, 200], self.medium_tires)
         self.computer = Car(pg.transform.scale(pg.image.load("res/textures/car_alfa.png"), (60, 21)).convert_alpha(),
-                            [500, 200])
+                            [500, 200], self.medium_tires)
 
         self.a_down = False
         self.d_down = False
         self.w_down = False
         self.s_down = False
 
-        # Game logic variables
         self.window_width = width
         self.window_height = height
         self.state_stack = []
+        self.pit_timer: float = 0.0
+        self.pit_timerange = (2.0, 5.0)  # Pit time range in seconds
 
         self.logo = pg.image.load("res/textures/logo.png")
         self.logo_small = pg.transform.scale(self.logo, [175, 175])
@@ -55,12 +63,16 @@ class Game:
 
         self.click_sound = pg.mixer.Sound("res/sfx/click.wav")
 
-        self.soft_tire_health = 10000.0
-        self.medium_tire_health = 15000.0
-        self.hard_tire_health = 20000.0
-
         self.clock = pg.time.Clock()
         self.fps = 60
+
+    def player_can_pit(self) -> bool:
+        # print(f"{self.player.position[0]} {self.player.position[1]}")
+        return 608 < self.player.position[0] < 640 and 188 < self.player.position[1] < 210 and self.player.velocity == 0.0
+
+    def switch_player_tires(self, new_tires: Tire):
+        self.player.tires = new_tires
+        self.player.distance_driven = 0.0
 
     def start(self):
         play_button = pg.Rect((265, 375), (750, 100))
@@ -226,6 +238,8 @@ class Game:
         ui_current_speed_text = self.font_24.render("Speed (km/h)", False, self.color_white).convert()
         ui_current_position_text = self.font_24.render("Position", False, self.color_white).convert()
 
+        ui_tire_swap_hint = self.font_40.render("[1] Soft, [2] Medium, [3] Hard", False, self.color_white).convert()
+
         ui_tire_soft = pg.transform.scale(pg.image.load("res/textures/tire_soft.png"), (64, 64))
         ui_tire_medium = pg.transform.scale(pg.image.load("res/textures/tire_medium.png"), (64, 64))
         ui_tire_hard = pg.transform.scale(pg.image.load("res/textures/tire_hard.png"), (64, 64))
@@ -233,6 +247,8 @@ class Game:
         ui_tire_soft_text = self.font_24.render("S", False, (255, 0, 0)).convert()
         ui_tire_medium_text = self.font_24.render("M", False, (221, 179, 0)).convert()
         ui_tire_hard_text = self.font_24.render("H", False, (255, 107, 0)).convert()
+
+        ui_pit_timer_text = self.font_24.render(f"Pit time: {self.pit_timer:.3f}", False, self.color_red).convert()
 
         while self.state_stack[-1] == "GAME":
             for event in pg.event.get():
@@ -252,6 +268,18 @@ class Game:
                         self.w_down = True
                     elif event.key == pg.K_s:
                         self.s_down = True
+                    elif event.key == pg.K_1 and self.pit_timer <= 0:
+                        if self.player.can_pit:
+                            self.pit_timer = random.uniform(self.pit_timerange[0], self.pit_timerange[1])
+                            self.switch_player_tires(self.soft_tires)
+                    elif event.key == pg.K_2 and self.pit_timer <= 0:
+                        if self.player.can_pit:
+                            self.pit_timer = random.uniform(self.pit_timerange[0], self.pit_timerange[1])
+                            self.switch_player_tires(self.medium_tires)
+                    elif event.key == pg.K_3 and self.pit_timer <= 0:
+                        if self.player.can_pit:
+                            self.pit_timer = random.uniform(self.pit_timerange[0], self.pit_timerange[1])
+                            self.switch_player_tires(self.hard_tires)
                 elif event.type == pg.KEYUP:
                     if event.key == pg.K_a:
                         self.a_down = False
@@ -263,40 +291,50 @@ class Game:
                         self.s_down = False
 
             # Update
-            if self.a_down:
+            if self.pit_timer > 0.0:
+                if self.pit_timer - 1 / self.fps < 0.0:
+                    self.pit_timer = 0.0
+                else:
+                    self.pit_timer -= 1 / self.fps
+            ui_pit_timer_text = self.font_24.render(f"Pit time: {self.pit_timer:.3f}", False, self.color_red).convert()
+
+            if self.a_down and self.pit_timer <= 0:
                 if self.player.velocity != 0.0:  # Can only turn when moving forwards or backwards
                     self.player.rotation = (self.player.rotation + self.player.rotation_speed) % 360
-            elif self.d_down:
+            elif self.d_down and self.pit_timer <= 0:
                 if self.player.velocity != 0.0:  # Can only turn when moving forwards or backwards
                     if self.player.rotation - self.player.rotation_speed < 0:
                         self.player.rotation = 360.0 - self.player.rotation_speed
                     else:
                         self.player.rotation -= self.player.rotation_speed
 
-            if self.w_down:  # Accelerate forwards when W is held down
-                self.player.acceleration = self.player.max_acceleration
-                self.player.velocity = min(self.player.velocity + self.player.acceleration, self.player.max_velocity)
-            elif self.s_down:  # Accelerate backwards when S is held down
-                self.player.acceleration = self.player.min_acceleration
-                self.player.velocity = max(self.player.velocity + self.player.acceleration, self.player.max_backwards_velocity)
+            if self.w_down and self.pit_timer <= 0:  # Accelerate forwards when W is held down
+                self.player.acceleration = self.player.tires.max_forwards_acceleration
+                self.player.velocity = min(self.player.velocity + self.player.acceleration, self.player.tires.max_forwards_velocity)
+            elif self.s_down and self.pit_timer <= 0:  # Accelerate backwards when S is held down
+                self.player.acceleration = self.player.tires.max_backwards_acceleration
+                self.player.velocity = max(self.player.velocity + self.player.acceleration, self.player.tires.max_backwards_velocity)
             else:  # Slow down when neither W nor S are held down
                 if -0.1 < self.player.velocity < 0.1:
                     self.player.acceleration = 0.0
                     self.player.velocity = 0.0
                 elif self.player.velocity > 0.1:  # If player is moving forwards
-                    self.player.acceleration = self.player.drag
+                    self.player.acceleration = self.player.tires.drag
                 else:  # If player is moving backwards
-                    self.player.acceleration = self.player.max_acceleration
+                    self.player.acceleration = self.player.tires.max_forwards_acceleration
                 self.player.velocity = self.player.velocity + self.player.acceleration
             self.player.position[0] -= self.player.velocity * math.cos(self.player.rotation / 180 * math.pi)
             self.player.position[1] += self.player.velocity * math.sin(self.player.rotation / 180 * math.pi)
 
             # The player cannot turn at full capacity when not going fast, the turning speed is dependent on the velocity
-            self.player.rotation_speed = min(self.player.velocity * 0.5, self.player.max_rotation_speed)
+            self.player.rotation_speed = min(self.player.velocity * 0.5, self.player.tires.max_rotation_speed)
 
             # Update the distance driven with the current tires
             self.player.distance_driven += abs(self.player.velocity)
-            print(self.player.distance_driven)
+            # print(self.player.distance_driven)
+
+            # Check if player can pit
+            self.player.can_pit = self.player_can_pit()
 
             # Render
             self.screen.fill(self.bg_color)
@@ -349,27 +387,35 @@ class Game:
             self.screen.blit(ui_current_speed_text, (490, 10))
             self.screen.blit(ui_current_position_text, (1040, 10))
 
-            if self.player.tire_type == 0:  # Soft tires
+            if self.player.tires.type == "SOFT":
                 self.screen.blit(ui_tire_soft, (335, 42))
                 self.screen.blit(ui_tire_soft_text, (358, 61))
-            elif self.player.tire_type == 1:  # Medium tires
+            elif self.player.tires.type == "MEDIUM":
                 self.screen.blit(ui_tire_medium, (335, 42))
                 self.screen.blit(ui_tire_medium_text, (353, 60))
-            else:  # Hard tires
+            elif self.player.tires.type == "HARD":
                 self.screen.blit(ui_tire_hard, (335, 42))
                 self.screen.blit(ui_tire_hard_text, (356, 61))
 
             # Game UI: Tire Health (Health bars)
-            if self.player.distance_driven < self.player.tire_health:
+            if self.player.distance_driven < self.player.tires.health:
                 pg.draw.rect(self.screen, self.color_red, ui_tire_health_20)
-            if self.player.distance_driven < self.player.tire_health / 5 * 4:
+            if self.player.distance_driven < self.player.tires.health / 5 * 4:
                 pg.draw.rect(self.screen, self.color_orange, ui_tire_health_40)
-            if self.player.distance_driven < self.player.tire_health / 5 * 3:
+            if self.player.distance_driven < self.player.tires.health / 5 * 3:
                 pg.draw.rect(self.screen, self.color_yellow, ui_tire_health_60)
-            if self.player.distance_driven < self.player.tire_health / 5 * 2:
+            if self.player.distance_driven < self.player.tires.health / 5 * 2:
                 pg.draw.rect(self.screen, self.color_yellowish_green, ui_tire_health_80)
-            if self.player.distance_driven < self.player.tire_health / 5:
+            if self.player.distance_driven < self.player.tires.health / 5:
                 pg.draw.rect(self.screen, self.color_green, ui_tire_health_100)
+
+            # Show the tire swap hint
+            if self.player.can_pit:
+                self.screen.blit(ui_tire_swap_hint, (310, 457))
+
+            # Pit timer text
+            if self.pit_timer > 0.0:
+                self.screen.blit(ui_pit_timer_text, (730, 10))
 
             # The actual speed display
             self.screen.blit(self.font_40.render(f"{int(self.player.velocity * 20)}", False, self.color_white).convert(), (500, 56))
