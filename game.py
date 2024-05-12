@@ -18,10 +18,11 @@ class Game:
         self.soft_tires = Tire("SOFT", 10000.0, 12.5, -3.0, 0.05, -0.1, -0.02, 2.0)
         self.medium_tires = Tire("MEDIUM", 15000.0, 10, -2.0, 0.035, -0.08, -0.04, 1.75)
         self.hard_tires = Tire("HARD", 20000.0, 7.5, -1.0, 0.02, -0.06, -0.06, 1.5)
+        self.destroyed_tires = Tire("DESTROYED", 0.0, 2.0, -0.2, 0.005, -0.1, -0.05, 0.5)
 
         # Game variables
         self.player = Car(pg.transform.scale(pg.image.load("res/textures/car_merc.png"), (60, 21)).convert_alpha(),
-                          [620, 200], self.medium_tires)
+                          [600, 300], self.soft_tires)
         self.computer = Car(pg.transform.scale(pg.image.load("res/textures/car_alfa.png"), (60, 21)).convert_alpha(),
                             [500, 200], self.medium_tires)
 
@@ -62,6 +63,8 @@ class Game:
                                                self.color_white).convert()
 
         self.click_sound = pg.mixer.Sound("res/sfx/click.wav")
+        self.tire_change_sound = pg.mixer.Sound("res/sfx/tire-change.wav")
+        self.tire_destroyed_sound = pg.mixer.Sound("res/sfx/tire-destroyed.wav")
 
         self.clock = pg.time.Clock()
         self.fps = 60
@@ -248,8 +251,6 @@ class Game:
         ui_tire_medium_text = self.font_24.render("M", False, (221, 179, 0)).convert()
         ui_tire_hard_text = self.font_24.render("H", False, (255, 107, 0)).convert()
 
-        ui_pit_timer_text = self.font_24.render(f"Pit time: {self.pit_timer:.3f}", False, self.color_red).convert()
-
         while self.state_stack[-1] == "GAME":
             for event in pg.event.get():
                 if event.type == pg.QUIT:
@@ -270,14 +271,17 @@ class Game:
                         self.s_down = True
                     elif event.key == pg.K_1 and self.pit_timer <= 0:
                         if self.player.can_pit:
+                            pg.mixer.Sound.play(self.tire_change_sound)
                             self.pit_timer = random.uniform(self.pit_timerange[0], self.pit_timerange[1])
                             self.switch_player_tires(self.soft_tires)
                     elif event.key == pg.K_2 and self.pit_timer <= 0:
                         if self.player.can_pit:
+                            pg.mixer.Sound.play(self.tire_change_sound)
                             self.pit_timer = random.uniform(self.pit_timerange[0], self.pit_timerange[1])
                             self.switch_player_tires(self.medium_tires)
                     elif event.key == pg.K_3 and self.pit_timer <= 0:
                         if self.player.can_pit:
+                            pg.mixer.Sound.play(self.tire_change_sound)
                             self.pit_timer = random.uniform(self.pit_timerange[0], self.pit_timerange[1])
                             self.switch_player_tires(self.hard_tires)
                 elif event.type == pg.KEYUP:
@@ -297,6 +301,11 @@ class Game:
                 else:
                     self.pit_timer -= 1 / self.fps
             ui_pit_timer_text = self.font_24.render(f"Pit time: {self.pit_timer:.3f}", False, self.color_red).convert()
+
+            # Player tires get destroyed when you drive more than they can take
+            if self.player.distance_driven > self.player.tires.health and self.player.tires != self.destroyed_tires:
+                pg.mixer.Sound.play(self.tire_destroyed_sound)
+                self.player.tires = self.destroyed_tires
 
             if self.a_down and self.pit_timer <= 0:
                 if self.player.velocity != 0.0:  # Can only turn when moving forwards or backwards
