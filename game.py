@@ -55,6 +55,10 @@ class Game:
 
         self.click_sound = pg.mixer.Sound("res/sfx/click.wav")
 
+        self.soft_tire_health = 10000.0
+        self.medium_tire_health = 15000.0
+        self.hard_tire_health = 20000.0
+
         self.clock = pg.time.Clock()
         self.fps = 60
 
@@ -292,7 +296,7 @@ class Game:
 
             # Update the distance driven with the current tires
             self.player.distance_driven += abs(self.player.velocity)
-            # print(self.player.distance_driven)
+            print(self.player.distance_driven)
 
             # Render
             self.screen.fill(self.bg_color)
@@ -356,16 +360,16 @@ class Game:
                 self.screen.blit(ui_tire_hard_text, (356, 61))
 
             # Game UI: Tire Health (Health bars)
-            # 20%
-            pg.draw.rect(self.screen, self.color_red, ui_tire_health_20)
-            # 40%
-            pg.draw.rect(self.screen, self.color_orange, ui_tire_health_40)
-            # 60%
-            pg.draw.rect(self.screen, self.color_yellow, ui_tire_health_60)
-            # 80%
-            pg.draw.rect(self.screen, self.color_yellowish_green, ui_tire_health_80)
-            # 100%
-            pg.draw.rect(self.screen, self.color_green, ui_tire_health_100)
+            if self.player.distance_driven < self.player.tire_health:
+                pg.draw.rect(self.screen, self.color_red, ui_tire_health_20)
+            if self.player.distance_driven < self.player.tire_health / 5 * 4:
+                pg.draw.rect(self.screen, self.color_orange, ui_tire_health_40)
+            if self.player.distance_driven < self.player.tire_health / 5 * 3:
+                pg.draw.rect(self.screen, self.color_yellow, ui_tire_health_60)
+            if self.player.distance_driven < self.player.tire_health / 5 * 2:
+                pg.draw.rect(self.screen, self.color_yellowish_green, ui_tire_health_80)
+            if self.player.distance_driven < self.player.tire_health / 5:
+                pg.draw.rect(self.screen, self.color_green, ui_tire_health_100)
 
             # The actual speed display
             self.screen.blit(self.font_40.render(f"{int(self.player.velocity * 20)}", False, self.color_white).convert(), (500, 56))

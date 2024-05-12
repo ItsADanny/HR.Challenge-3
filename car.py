@@ -18,7 +18,8 @@ class Car(pg.sprite.Sprite):
         self.max_backwards_velocity = -3.0
         self.rotation_speed: float = 0.0
         self.max_rotation_speed: float = 2.0
-        self.distance_driven: float = 0.0  # The distance driven with the current tires, used for tire health
+        self.distance_driven: float = 0.0  # The distance driven with the current tires, used for tire health bar
+        self.tire_health: float = 10000.0  # Soft 10000, Medium 15000, Hard 20000
 
     def render(self, screen: pg.Surface):
         rotated_model = pg.transform.rotate(self.image, self.rotation)
