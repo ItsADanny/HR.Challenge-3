@@ -22,9 +22,9 @@ class Game:
 
         # Game variables
         self.player = Car(pg.transform.scale(pg.image.load("res/textures/car_merc.png"), (60, 21)).convert_alpha(),
-                          [600, 300], self.soft_tires)
+                          [500, 300], self.soft_tires)
         self.computer = Car(pg.transform.scale(pg.image.load("res/textures/car_alfa.png"), (60, 21)).convert_alpha(),
-                            [500, 200], self.medium_tires)
+                            [520, 340], self.medium_tires)
 
         self.a_down = False
         self.d_down = False
@@ -44,6 +44,7 @@ class Game:
         self.font_100 = pg.font.Font("res/fonts/F1-regular.ttf", 100)
         self.font_50 = pg.font.Font("res/fonts/F1-regular.ttf", 50)
         self.font_40 = pg.font.Font("res/fonts/F1-regular.ttf", 40)
+        self.font_30 = pg.font.Font("res/fonts/F1-regular.ttf", 30)
         self.font_24 = pg.font.Font("res/fonts/F1-regular.ttf", 25)
         self.font_12 = pg.font.Font("res/fonts/F1-regular.ttf", 12)
 
@@ -72,6 +73,15 @@ class Game:
     def player_can_pit(self) -> bool:
         # print(f"{self.player.position[0]} {self.player.position[1]}")
         return 608 < self.player.position[0] < 640 and 188 < self.player.position[1] < 210 and self.player.velocity == 0.0
+
+    def over_finish(self, entity) -> bool:
+        # Finish line positions
+        # map_finishline1 = pg.Rect((410, 280), (5, 120))
+        # map_finishline2 = pg.Rect((445, 280), (5, 120))
+        return 410 < entity.position[0] < 445 and 280 < entity.position[1] < 400 and entity.velocity > 0
+
+    def points_reached(self, entity) -> bool:
+        return entity.lapcount == 16
 
     def switch_player_tires(self, new_tires: Tire):
         self.player.tires = new_tires
@@ -224,6 +234,62 @@ class Game:
             pg.display.update()
             self.clock.tick(self.fps)
 
+    def end_screen(self, victor):
+        play_button = pg.Rect((265, 375), (750, 100))
+        quit_button = pg.Rect((265, 500), (750, 100))
+
+        # Render
+        self.screen.fill(self.bg_color)
+
+        # Grass background
+        green_background = pg.Rect((0, 400), (self.screen.get_width(), 400))
+        pg.draw.rect(self.screen, self.color_green, green_background)
+
+        # Road
+        road_background = pg.Rect((340, 400), (600, 400))
+        pg.draw.rect(self.screen, self.color_black, road_background)
+        # Road side - Left
+        pg.draw.polygon(self.screen, self.color_black, ((340, 400), (340, 720), (250, 720)))
+        # Road side - Right
+        pg.draw.polygon(self.screen, self.color_black, ((940, 400), (940, 720), (1035, 720)))
+        # Road side wall - left
+        pg.draw.polygon(self.screen, self.color_red, ((340, 400), (250, 720), (210, 720), (300, 400)))
+        # Road side wall - right
+        pg.draw.polygon(self.screen, self.color_red, ((940, 400), (1035, 720), (1075, 720), (980, 400)))
+
+        # Play button and text
+        pg.draw.rect(self.screen, self.color_dark_grey, play_button, border_radius=15)
+        if play_button.collidepoint(pg.mouse.get_pos()):
+            play_text = self.font_50.render("Play again", False, self.color_red).convert()
+        else:
+            play_text = self.font_50.render("Play again", False, self.color_white).convert()
+        self.screen.blit(play_text, play_text.get_rect(center=(play_button.centerx, play_button.centery)))
+        # Quit button and text
+        pg.draw.rect(self.screen, self.color_dark_grey, quit_button, border_radius=15)
+        if quit_button.collidepoint(pg.mouse.get_pos()):
+            quit_text = self.font_50.render("Quit", False, self.color_red).convert()
+        else:
+            quit_text = self.font_50.render("Quit", False, self.color_white).convert()
+        self.screen.blit(quit_text, quit_text.get_rect(center=(quit_button.centerx, quit_button.centery)))
+        # Logo
+        self.screen.blit(self.logo_small, self.logo_small.get_rect(center=((self.window_width / 2) - 155, 92)))
+        # Title text
+        self.screen.blit(self.title_text, (540, 70))
+        # Winner text
+        victor_text = self.font_50.render("And the winner is...", False, self.color_black).convert()
+        self.screen.blit(victor_text, (380, 200))
+        if victor == "Player":
+            victor_result_text = self.font_100.render("The Player", False, self.color_red).convert()
+            self.screen.blit(victor_result_text, (340, 250))
+        else:
+            victor_result_text = self.font_100.render("The Computer", False, self.color_red).convert()
+            self.screen.blit(victor_result_text, (230, 250))
+        # Credit text
+        self.screen.blit(self.credit_text, (300, 650))
+        # PyGame Render
+        pg.display.update()
+        self.clock.tick(self.fps)
+
     def game(self):
         ui_tire_health_20 = pg.Rect((15, 45), (40, 60))
         ui_tire_health_40 = pg.Rect((60, 45), (40, 60))
@@ -234,12 +300,14 @@ class Game:
         ui_current_tire_health_bg = pg.Rect((10, 40), (230, 70))
         ui_current_tire_bg = pg.Rect((250, 40), (230, 70))
         ui_current_speed_bg = pg.Rect((490, 40), (230, 70))
-        ui_current_position_bg = pg.Rect((1040, 40), (230, 70))
+        ui_current_lap_player_bg = pg.Rect((1025, 40), (115, 70))
+        ui_current_lap_computer_bg = pg.Rect((1145, 40), (115, 70))
 
         ui_current_tire_health_text = self.font_24.render("Tire Health", False, self.color_white).convert()
         ui_current_tire_text = self.font_24.render("Current Tire", False, self.color_white).convert()
         ui_current_speed_text = self.font_24.render("Speed (km/h)", False, self.color_white).convert()
-        ui_current_position_text = self.font_24.render("Position", False, self.color_white).convert()
+        ui_current_lap_player_text = self.font_24.render("Player", False, self.color_white).convert()
+        ui_current_lap_computer_text = self.font_24.render("PC", False, self.color_red).convert()
 
         ui_tire_swap_hint = self.font_40.render("[1] Soft, [2] Medium, [3] Hard", False, self.color_white).convert()
 
@@ -250,6 +318,13 @@ class Game:
         ui_tire_soft_text = self.font_24.render("S", False, (255, 0, 0)).convert()
         ui_tire_medium_text = self.font_24.render("M", False, (221, 179, 0)).convert()
         ui_tire_hard_text = self.font_24.render("H", False, (255, 107, 0)).convert()
+
+        # Make the default lap count 0 for both the player and the computer
+        self.player.lap_count = 0
+        self.computer.lap_count = 0
+
+        player_finish_detected = False
+        computer_finish_detected = False
 
         while self.state_stack[-1] == "GAME":
             for event in pg.event.get():
@@ -345,6 +420,10 @@ class Game:
             # Check if player can pit
             self.player.can_pit = self.player_can_pit()
 
+            # Check if the player is over the finish
+            self.player.over_finish = self.over_finish(self.player)
+            self.computer.over_finish = self.over_finish(self.computer)
+
             # Render
             self.screen.fill(self.bg_color)
 
@@ -357,6 +436,16 @@ class Game:
             pg.draw.rect(self.screen, self.color_gray, map_road)
             pg.draw.circle(self.screen, self.color_gray, (300, 480), 220)
             pg.draw.circle(self.screen, self.color_gray, (960, 480), 220)
+            # Finish line
+            map_finishline1 = pg.Rect((410, 280), (5, 120))
+            pg.draw.rect(self.screen, self.color_white, map_finishline1)
+            map_finishtextbox = pg.Rect((415, 280), (30, 120))
+            pg.draw.rect(self.screen, self.color_gray, map_finishtextbox)
+            finishline_text = self.font_24.render("FINISH", False, self.color_white).convert()
+            finishline_text = pg.transform.rotate(finishline_text, 90)
+            self.screen.blit(finishline_text, finishline_text.get_rect(center=(map_finishtextbox.centerx, map_finishtextbox.centery)))
+            map_finishline2 = pg.Rect((445, 280), (5, 120))
+            pg.draw.rect(self.screen, self.color_white, map_finishline2)
             # Pit Lane
             map_pitlane = pg.Rect((400, 150), (450, 100))
             pg.draw.rect(self.screen, self.color_gray, map_pitlane)
@@ -376,7 +465,16 @@ class Game:
             pg.draw.rect(self.screen, self.color_green, map_grass)
             pg.draw.circle(self.screen, self.color_green, (360, 480), 70)
             pg.draw.circle(self.screen, self.color_green, (900, 480), 70)
-
+            # Barricade 1 (center of the race track)
+            map_baricade1 = pg.Rect((360, 475), (540, 10))
+            pg.draw.rect(self.screen, self.color_red, map_baricade1)
+            # Barricade2 (Barricade that splits the pitstop from the racetrack
+            map_baricade2 = pg.Rect((410, 255), (430, 10))
+            pg.draw.rect(self.screen, self.color_red, map_baricade2)
+            # Barricade 3 (Barricade to the left of the pitstop)
+            pg.draw.polygon(self.screen, self.color_red, ((360, 160), (220, 260), (230, 260), (370, 160)))
+            # Barricade 4 (Barricade to the right of the pitstop)
+            pg.draw.polygon(self.screen, self.color_red, ((890, 160), (1030, 260), (1040, 260), (900, 160)))
             # Game UI Background
             ui_bg = pg.Rect((0, 0), (self.screen.get_width(), 120))
             pg.draw.rect(self.screen, self.color_dark_grey, ui_bg)
@@ -384,17 +482,19 @@ class Game:
             ui_splitter = pg.Rect((0, 120), (self.screen.get_width(), 10))
             pg.draw.rect(self.screen, self.color_gray, ui_splitter)
 
-            # Game UI background for: Tire health, Current tire, Current Speed and Current position
+            # Game UI background for: Tire health, Current tire, Current Speed, Player current lap and Computer current lap
             pg.draw.rect(self.screen, self.color_black, ui_current_tire_health_bg)
             pg.draw.rect(self.screen, self.color_black, ui_current_tire_bg)
             pg.draw.rect(self.screen, self.color_black, ui_current_speed_bg)
-            pg.draw.rect(self.screen, self.color_black, ui_current_position_bg)
+            pg.draw.rect(self.screen, self.color_black, ui_current_lap_player_bg)
+            pg.draw.rect(self.screen, self.color_black, ui_current_lap_computer_bg)
 
             # Game UI text for: Tire health, Current tire, Current Speed, Current position and Current tire
             self.screen.blit(ui_current_tire_health_text, (10, 10))
             self.screen.blit(ui_current_tire_text, (250, 10))
             self.screen.blit(ui_current_speed_text, (490, 10))
-            self.screen.blit(ui_current_position_text, (1040, 10))
+            self.screen.blit(ui_current_lap_player_text, (1025, 10))
+            self.screen.blit(ui_current_lap_computer_text, (1145, 10))
 
             if self.player.tires.type == "SOFT":
                 self.screen.blit(ui_tire_soft, (335, 42))
@@ -425,6 +525,32 @@ class Game:
             # Pit timer text
             if self.pit_timer > 0.0:
                 self.screen.blit(ui_pit_timer_text, (730, 10))
+
+            # Finish - lap counter update
+            # To detect if the player went over the finish and if so, add 1 to the lap count
+            if self.player.over_finish:
+                if not player_finish_detected:
+                    self.player.lap_count += 1
+                    player_finish_detected = True
+            else:
+                if player_finish_detected:
+                    player_finish_detected = False
+            # To detect if the computer went over the finish and if so, add 1 to the lap count
+            if self.computer.over_finish:
+                if not computer_finish_detected:
+                    self.computer.lap_count += 1
+                    computer_finish_detected = True
+            else:
+                if computer_finish_detected:
+                    computer_finish_detected = False
+
+            # Current player and Computer lap count
+            # Player
+            ui_current_lap_count_player_text = self.font_30.render(f"{self.player.lap_count}/15", False, self.color_white).convert()
+            self.screen.blit(ui_current_lap_count_player_text, (1035, 60))
+            # Computer
+            ui_current_lap_count_computer_text = self.font_30.render(f"{self.computer.lap_count}/15", False, self.color_red).convert()
+            self.screen.blit(ui_current_lap_count_computer_text, (1155, 60))
 
             # The actual speed display
             self.screen.blit(self.font_40.render(f"{int(self.player.velocity * 20)}", False, self.color_white).convert(), (500, 56))
