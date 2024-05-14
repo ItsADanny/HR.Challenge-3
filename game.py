@@ -22,7 +22,7 @@ class Game:
         self.destroyed_tires = Tire("DESTROYED", 0.0, 2.0, -0.2, 0.005, -0.1, -0.05, 0.5)
 
         self.lap_count = 15
-        self.cpu_speed = 2.0
+        self.cpu_speed = 3.0
         self.car_skins = ("car_alfa.png", "car_aston.png", "car_bull.png", "car_mclaren.png", "car_merc.png")
         self.player = Car(pg.transform.scale(pg.image.load("res/textures/" + random.choice(self.car_skins)), (60, 21)).convert_alpha(), [500, 300], self.medium_tires)
         self.computer = Car(pg.transform.scale(pg.image.load("res/textures/" + random.choice(self.car_skins)), (60, 21)).convert_alpha(), [520, 340], self.medium_tires)
@@ -448,7 +448,7 @@ class Game:
             elif computer_lap_count > self.lap_count:
                 self.state_stack.append("END")
                 self.end_screen("Computer")
-            if not self.point_close_to_point(self.computer.position[0], self.computer.position[1], self.computer_path[self.computer_path_index][0], self.computer_path[self.computer_path_index][1], 1):
+            if not self.point_close_to_point(self.computer.position[0], self.computer.position[1], self.computer_path[self.computer_path_index][0], self.computer_path[self.computer_path_index][1], 5):
                 angle = math.degrees(math.atan2(self.computer_path[self.computer_path_index][1] - self.computer.position[1], self.computer.position[0] - self.computer_path[self.computer_path_index][0]))
                 if angle < 0:  # Angle is in range 0 - 180, so convert it to 0 - 360
                     angle += 360
