@@ -16,6 +16,7 @@ class Car(pg.sprite.Sprite):
         self.rotation_speed: float = 0.0
         self.distance_driven: float = 0.0  # The distance driven with the current tires, used for tire health bar
         self.can_pit = False
+        self.collision_sound_played = False
 
     def render(self, screen: pg.Surface):
         rotated_model = pg.transform.rotate(self.image, self.rotation)

@@ -69,6 +69,7 @@ class Game:
         self.tire_change_sound = pg.mixer.Sound("res/sfx/tire-change.wav")
         self.tire_destroyed_sound = pg.mixer.Sound("res/sfx/tire-destroyed.wav")
         self.beep_sound = pg.mixer.Sound("res/sfx/beep.wav")
+        self.collision_sound = pg.mixer.Sound("res/sfx/collide.wav")
 
         self.clock = pg.time.Clock()
         self.fps = 60
@@ -441,10 +442,13 @@ class Game:
                     self.barricade_collision = True
                     self.player.velocity = 0.0
                     self.player.acceleration = 0.0
+
+                    if not self.player.collision_sound_played:
+                        pg.mixer.Sound.play(self.collision_sound)
+                        self.player.collision_sound_played = True
                     break
                 self.barricade_collision = False
-
-            print(self.barricade_collision)
+                self.player.collision_sound_played = False
 
             # Render
             self.screen.fill(self.bg_color)
