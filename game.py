@@ -69,7 +69,6 @@ class Game:
         self.tire_change_sound = pg.mixer.Sound("res/sfx/tire-change.wav")
         self.tire_destroyed_sound = pg.mixer.Sound("res/sfx/tire-destroyed.wav")
         self.beep_sound = pg.mixer.Sound("res/sfx/beep.wav")
-        self.collision_sound = pg.mixer.Sound("res/sfx/collide.wav")
 
         self.clock = pg.time.Clock()
         self.fps = 60
@@ -323,7 +322,15 @@ class Game:
         ui_tire_medium_text = self.font_24.render("M", False, (221, 179, 0)).convert()
         ui_tire_hard_text = self.font_24.render("H", False, (255, 107, 0)).convert()
 
-        map_barricades = [Barricade(pg.transform.scale(pg.image.load("res/textures/barricade.png"), (550, 10)).convert_alpha(), [630, 420])
+        map_barricades = [Barricade(pg.transform.scale(pg.image.load("res/textures/barricade.png"), (550, 10)).convert_alpha(), [630, 420]),
+                          Barricade(pg.transform.scale(pg.image.load("res/textures/barricade.png"),(550, 10)).convert_alpha(), [630, 540]),
+                          Barricade(pg.transform.scale(pg.image.load("res/textures/barricade.png"),(1230, 10)).convert_alpha(), [645, 140]),
+                          Barricade(pg.transform.scale(pg.image.load("res/textures/barricade.png"),(1230, 10)).convert_alpha(), [645, 710]),
+                          Barricade(pg.transform.scale(pg.image.load("res/textures/barricade_vertical.png"),(10, 550)).convert_alpha(), [35, 425]),
+                          Barricade(pg.transform.scale(pg.image.load("res/textures/barricade_vertical.png"),(10, 550)).convert_alpha(), [1255, 425]),
+                          Barricade(pg.transform.scale(pg.image.load("res/textures/barricade_vertical.png"),(10, 120)).convert_alpha(), [360, 485]),
+                          Barricade(pg.transform.scale(pg.image.load("res/textures/barricade_vertical.png"),(10, 120)).convert_alpha(), [900, 485]),
+                          Barricade(pg.transform.scale(pg.image.load("res/textures/barricade.png"),(420, 10)).convert_alpha(), [625, 260])
                           ]
 
         # Make the default lap count 0 for both the player and the computer
@@ -439,16 +446,10 @@ class Game:
 
             for barricade in map_barricades:
                 if pg.sprite.collide_rect(self.player, barricade):
-                    self.barricade_collision = True
                     self.player.velocity = 0.0
                     self.player.acceleration = 0.0
-
-                    if not self.player.collision_sound_played:
-                        pg.mixer.Sound.play(self.collision_sound)
-                        self.player.collision_sound_played = True
                     break
                 self.barricade_collision = False
-                self.player.collision_sound_played = False
 
             # Render
             self.screen.fill(self.bg_color)
@@ -491,13 +492,6 @@ class Game:
             pg.draw.rect(self.screen, self.color_green, map_grass)
             pg.draw.circle(self.screen, self.color_green, (360, 480), 70)
             pg.draw.circle(self.screen, self.color_green, (900, 480), 70)
-
-
-            pg.draw.polygon(self.screen, self.color_red, ((360, 160), (220, 260), (230, 260), (370, 160)))
-            # Barricade 4 (Barricade to the right of the pitstop)
-            pg.draw.polygon(self.screen, self.color_red, ((890, 160), (1030, 260), (1040, 260), (900, 160)))
-
-
 
             # Game UI Background
             ui_bg = pg.Rect((0, 0), (self.screen.get_width(), 120))
