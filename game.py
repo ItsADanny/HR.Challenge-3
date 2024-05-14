@@ -14,19 +14,23 @@ class Game:
         pg.mixer.init()
         self.screen = pg.display.set_mode((width, height))
         pg.display.set_caption(title)
-        # pg.display.set_icon(pg.image.load("res/icon.png"))
 
+        # Game variables
         self.soft_tires = Tire("SOFT", 10000.0, 12.5, -3.0, 0.05, -0.1, -0.02, 2.0)
         self.medium_tires = Tire("MEDIUM", 15000.0, 10, -2.0, 0.035, -0.08, -0.04, 1.75)
         self.hard_tires = Tire("HARD", 20000.0, 7.5, -1.0, 0.02, -0.06, -0.06, 1.5)
         self.destroyed_tires = Tire("DESTROYED", 0.0, 2.0, -0.2, 0.005, -0.1, -0.05, 0.5)
 
-        # Game variables
+        self.lap_count = 15
+        self.cpu_speed = 2.0
         self.car_skins = ("car_alfa.png", "car_aston.png", "car_bull.png", "car_mclaren.png", "car_merc.png")
-        self.player = Car(pg.transform.scale(pg.image.load("res/textures/" + random.choice(self.car_skins)), (60, 21)).convert_alpha(),
-                          [500, 300], self.medium_tires)
-        self.computer = Car(pg.transform.scale(pg.image.load("res/textures/" + random.choice(self.car_skins)), (60, 21)).convert_alpha(),
-                            [520, 340], self.medium_tires)
+        self.player = Car(pg.transform.scale(pg.image.load("res/textures/" + random.choice(self.car_skins)), (60, 21)).convert_alpha(), [500, 300], self.medium_tires)
+        self.computer = Car(pg.transform.scale(pg.image.load("res/textures/" + random.choice(self.car_skins)), (60, 21)).convert_alpha(), [520, 340], self.medium_tires)
+        self.computer.velocity = self.cpu_speed
+
+        self.computer_path = ()
+        self.randomize_path(0)
+        self.computer_path_index = 0
 
         self.a_down = False
         self.d_down = False
@@ -63,8 +67,7 @@ class Game:
         self.color_yellowish_green = (201, 219, 0)
 
         self.title_text = self.font_100.render("acing", False, self.color_black).convert()
-        self.credit_text = self.font_24.render("Game by Joshua (1092067) and Danny (1091749)", False,
-                                               self.color_white).convert()
+        self.credit_text = self.font_24.render("Game by Joshua (1092067) and Danny (1091749)", False, self.color_white).convert()
 
         self.click_sound = pg.mixer.Sound("res/sfx/click.wav")
         self.tire_change_sound = pg.mixer.Sound("res/sfx/tire-change.wav")
@@ -74,7 +77,30 @@ class Game:
         self.clock = pg.time.Clock()
         self.fps = 60
 
+    def randomize_path(self, random_range: int):
+        self.computer_path = ((370 + random.randint(random_range * -1, random_range), 340 + random.randint(random_range * -1, random_range)),
+                              (300 + random.randint(random_range * -1, random_range), 355 + random.randint(random_range * -1, random_range)),
+                              (230 + random.randint(random_range * -1, random_range), 380 + random.randint(random_range * -1, random_range)),
+                              (200 + random.randint(random_range * -1, random_range), 420 + random.randint(random_range * -1, random_range)),
+                              (190 + random.randint(random_range * -1, random_range), 475 + random.randint(random_range * -1, random_range)),
+                              (200 + random.randint(random_range * -1, random_range), 550 + random.randint(random_range * -1, random_range)),
+                              (250 + random.randint(random_range * -1, random_range), 600 + random.randint(random_range * -1, random_range)),
+                              (300 + random.randint(random_range * -1, random_range), 625 + random.randint(random_range * -1, random_range)),
+                              (615 + random.randint(random_range * -1, random_range), 630 + random.randint(random_range * -1, random_range)),
+                              (920 + random.randint(random_range * -1, random_range), 635 + random.randint(random_range * -1, random_range)),
+                              (1010 + random.randint(random_range * -1, random_range), 610 + random.randint(random_range * -1, random_range)),
+                              (1060 + random.randint(random_range * -1, random_range), 550 + random.randint(random_range * -1, random_range)),
+                              (1050 + random.randint(random_range * -1, random_range), 420 + random.randint(random_range * -1, random_range)),
+                              (1010 + random.randint(random_range * -1, random_range), 370 + random.randint(random_range * -1, random_range)),
+                              (920 + random.randint(random_range * -1, random_range), 335 + random.randint(random_range * -1, random_range)),
+                              (500 + random.randint(random_range * -1, random_range), 340 + random.randint(random_range * -1, random_range))
+                              )
+
+    def point_close_to_point(self, x1: float, y1: float, x2: float, y2: float, delta: float) -> bool:
+        return abs(x1 - x2) <= delta and abs(y1 - y2) <= delta
+
     def player_can_pit(self) -> bool:
+        # Debugging
         # print(f"{self.player.position[0]} {self.player.position[1]}")
         return 608 < self.player.position[0] < 640 and 188 < self.player.position[1] < 210 and self.player.velocity == 0.0
 
@@ -102,6 +128,8 @@ class Game:
         self.s_down = False
         self.pit_timer = 0.0
         self.barricade_collision = False
+        self.computer_path_index = 0
+        self.computer.velocity = self.cpu_speed
 
     def start(self):
         play_button = pg.Rect((265, 375), (750, 100))
@@ -239,9 +267,6 @@ class Game:
                 quit_text = self.font_50.render("Quit", False, self.color_white).convert()
             self.screen.blit(quit_text, quit_text.get_rect(center=(quit_button.centerx, quit_button.centery)))
 
-            # Game icon
-            # self.screen.blit(self.logo,
-            # self.logo.get_rect(center=(self.window_width / 2, self.window_height / 2)))
             # Logo
             self.screen.blit(self.logo_small, self.logo_small.get_rect(center=((self.window_width / 2) - 155, 92)))
             # Title text
@@ -365,8 +390,8 @@ class Game:
                           ]
 
         # Make the default lap count 0 for both the player and the computer
-        self.player.lap_count = 0
-        self.computer.lap_count = 0
+        player_lap_count = 0
+        computer_lap_count = 0
 
         player_finish_detected = False
         computer_finish_detected = False
@@ -377,10 +402,6 @@ class Game:
                     pg.quit()
                     exit(0)
                 elif event.type == pg.KEYDOWN:
-                    # TODO: Remove
-                    if event.key == pg.K_q:
-                        self.state_stack.append("END")
-                        self.end_screen("Computer")
                     if event.key == pg.K_ESCAPE:
                         # Show pause menu
                         self.state_stack.append("PAUSE")
@@ -421,6 +442,24 @@ class Game:
                         self.s_down = False
 
             # Update
+            if player_lap_count > self.lap_count:
+                self.state_stack.append("END")
+                self.end_screen("Player")
+            elif computer_lap_count > self.lap_count:
+                self.state_stack.append("END")
+                self.end_screen("Computer")
+            if not self.point_close_to_point(self.computer.position[0], self.computer.position[1], self.computer_path[self.computer_path_index][0], self.computer_path[self.computer_path_index][1], 1):
+                angle = math.degrees(math.atan2(self.computer_path[self.computer_path_index][1] - self.computer.position[1], self.computer.position[0] - self.computer_path[self.computer_path_index][0]))
+                if angle < 0:  # Angle is in range 0 - 180, so convert it to 0 - 360
+                    angle += 360
+                self.computer.rotation = angle
+
+                self.computer.position[0] -= self.computer.velocity * math.cos(self.computer.rotation / 180 * math.pi)
+                self.computer.position[1] += self.computer.velocity * math.sin(self.computer.rotation / 180 * math.pi)
+            else:
+                self.randomize_path(5)
+                self.computer_path_index = (self.computer_path_index + 1) % len(self.computer_path)
+
             if self.pit_timer > 0.0:
                 if self.pit_timer - 1 / self.fps < 0.0:
                     self.pit_timer = 0.0
@@ -466,6 +505,7 @@ class Game:
 
             # Update the distance driven with the current tires
             self.player.distance_driven += abs(self.player.velocity)
+            # Debugging
             # print(self.player.distance_driven)
 
             # Check if player can pit
@@ -583,7 +623,7 @@ class Game:
             # To detect if the player went over the finish and if so, add 1 to the lap count
             if self.player.over_finish:
                 if not player_finish_detected:
-                    self.player.lap_count += 1
+                    player_lap_count += 1
                     player_finish_detected = True
             else:
                 if player_finish_detected:
@@ -591,7 +631,7 @@ class Game:
             # To detect if the computer went over the finish and if so, add 1 to the lap count
             if self.computer.over_finish:
                 if not computer_finish_detected:
-                    self.computer.lap_count += 1
+                    computer_lap_count += 1
                     computer_finish_detected = True
             else:
                 if computer_finish_detected:
@@ -599,10 +639,10 @@ class Game:
 
             # Current player and Computer lap count
             # Player
-            ui_current_lap_count_player_text = self.font_30.render(f"{self.player.lap_count}/15", False, self.color_white).convert()
+            ui_current_lap_count_player_text = self.font_30.render(f"{player_lap_count}/{self.lap_count}", False, self.color_white).convert()
             self.screen.blit(ui_current_lap_count_player_text, (1035, 60))
             # Computer
-            ui_current_lap_count_computer_text = self.font_30.render(f"{self.computer.lap_count}/15", False, self.color_red).convert()
+            ui_current_lap_count_computer_text = self.font_30.render(f"{computer_lap_count}/{self.lap_count}", False, self.color_red).convert()
             self.screen.blit(ui_current_lap_count_computer_text, (1155, 60))
 
             # The actual speed display
@@ -611,12 +651,17 @@ class Game:
             # Draw the car
             self.player.render(self.screen)
             self.computer.render(self.screen)
+            # Debugging
             # print(f"{self.player_car.rotation} {math.cos(self.player_car.rotation / 180 * math.pi)}")
             # print(f"{self.player_car.rotation} {math.sin(self.player_car.rotation / 180 * math.pi)}")
 
             # Draw the barricades
             for barricade in map_barricades:
                 barricade.render(self.screen)
+
+            # This shows the computer path coordinates - Debugging
+            # for coordinate in self.computer_path:
+            #     pg.draw.rect(self.screen, self.color_red, pg.Rect(coordinate, (10, 10)))
 
             pg.display.update()
             self.clock.tick(self.fps)
