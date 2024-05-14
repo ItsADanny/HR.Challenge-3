@@ -20,4 +20,4 @@ class Car(pg.sprite.Sprite):
     def render(self, screen: pg.Surface):
         rotated_model = pg.transform.rotate(self.image, self.rotation)
         self.rect = rotated_model.get_rect(center=self.position)
-        screen.blit(rotated_model, rotated_model.get_rect(center=self.position))
+        screen.blit(rotated_model, self.rect)

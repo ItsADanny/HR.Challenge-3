@@ -4,6 +4,7 @@ import random
 
 from car import Car
 from tire import Tire
+from barricade import Barricade
 
 
 class Game:
@@ -36,6 +37,7 @@ class Game:
         self.state_stack = []
         self.pit_timer: float = 0.0
         self.pit_timerange = (2.0, 5.0)  # Pit time range in seconds
+        self.barricade_collision = False
 
         self.logo = pg.image.load("res/textures/logo.png")
         self.logo_small = pg.transform.scale(self.logo, [175, 175])
@@ -320,6 +322,9 @@ class Game:
         ui_tire_medium_text = self.font_24.render("M", False, (221, 179, 0)).convert()
         ui_tire_hard_text = self.font_24.render("H", False, (255, 107, 0)).convert()
 
+        map_barricades = [Barricade(pg.transform.scale(pg.image.load("res/textures/barricade.png"), (550, 10)).convert_alpha(), [630, 420])
+                          ]
+
         # Make the default lap count 0 for both the player and the computer
         self.player.lap_count = 0
         self.computer.lap_count = 0
@@ -385,17 +390,17 @@ class Game:
                 pg.mixer.Sound.play(self.tire_destroyed_sound)
                 self.player.tires = self.destroyed_tires
 
-            if self.a_down and self.pit_timer <= 0 and not pg.sprite.collide_mask(self.player, self.computer):
+            if self.a_down and self.pit_timer <= 0 and not pg.sprite.collide_mask(self.player, self.computer) and not self.barricade_collision:
                 if self.player.velocity != 0.0:  # Can only turn when moving forwards or backwards
                     self.player.rotation = (self.player.rotation + self.player.rotation_speed) % 360
-            elif self.d_down and self.pit_timer <= 0 and not pg.sprite.collide_mask(self.player, self.computer):
+            elif self.d_down and self.pit_timer <= 0 and not pg.sprite.collide_mask(self.player, self.computer) and not self.barricade_collision:
                 if self.player.velocity != 0.0:  # Can only turn when moving forwards or backwards
                     if self.player.rotation - self.player.rotation_speed < 0:
                         self.player.rotation = 360.0 - self.player.rotation_speed
                     else:
                         self.player.rotation -= self.player.rotation_speed
 
-            if self.w_down and self.pit_timer <= 0 and not pg.sprite.collide_mask(self.player, self.computer):  # Accelerate forwards when W is held down
+            if self.w_down and self.pit_timer <= 0 and not pg.sprite.collide_mask(self.player, self.computer) and not self.barricade_collision:  # Accelerate forwards when W is held down
                 self.player.acceleration = self.player.tires.max_forwards_acceleration
                 self.player.velocity = min(self.player.velocity + self.player.acceleration, self.player.tires.max_forwards_velocity)
             elif self.s_down and self.pit_timer <= 0:  # Accelerate backwards when S is held down
@@ -430,6 +435,16 @@ class Game:
             if pg.sprite.collide_mask(self.player, self.computer):
                 self.player.velocity = 0.0
                 self.player.acceleration = 0.0
+
+            for barricade in map_barricades:
+                if pg.sprite.collide_rect(self.player, barricade):
+                    self.barricade_collision = True
+                    self.player.velocity = 0.0
+                    self.player.acceleration = 0.0
+                    break
+                self.barricade_collision = False
+
+            print(self.barricade_collision)
 
             # Render
             self.screen.fill(self.bg_color)
@@ -474,15 +489,6 @@ class Game:
             pg.draw.circle(self.screen, self.color_green, (900, 480), 70)
 
 
-
-
-            # Barricade 1 (center of the race track)
-            map_baricade1 = pg.Rect((360, 475), (540, 10))
-            pg.draw.rect(self.screen, self.color_red, map_baricade1)
-            # Barricade2 (Barricade that splits the pitstop from the racetrack
-            map_baricade2 = pg.Rect((410, 255), (430, 10))
-            pg.draw.rect(self.screen, self.color_red, map_baricade2)
-            # Barricade 3 (Barricade to the left of the pitstop)
             pg.draw.polygon(self.screen, self.color_red, ((360, 160), (220, 260), (230, 260), (370, 160)))
             # Barricade 4 (Barricade to the right of the pitstop)
             pg.draw.polygon(self.screen, self.color_red, ((890, 160), (1030, 260), (1040, 260), (900, 160)))
@@ -574,6 +580,10 @@ class Game:
             self.computer.render(self.screen)
             # print(f"{self.player_car.rotation} {math.cos(self.player_car.rotation / 180 * math.pi)}")
             # print(f"{self.player_car.rotation} {math.sin(self.player_car.rotation / 180 * math.pi)}")
+
+            # Draw the barricades
+            for barricade in map_barricades:
+                barricade.render(self.screen)
 
             pg.display.update()
             self.clock.tick(self.fps)
