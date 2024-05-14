@@ -66,6 +66,7 @@ class Game:
         self.click_sound = pg.mixer.Sound("res/sfx/click.wav")
         self.tire_change_sound = pg.mixer.Sound("res/sfx/tire-change.wav")
         self.tire_destroyed_sound = pg.mixer.Sound("res/sfx/tire-destroyed.wav")
+        self.beep_sound = pg.mixer.Sound("res/sfx/beep.wav")
 
         self.clock = pg.time.Clock()
         self.fps = 60
@@ -336,6 +337,8 @@ class Game:
                         # Show pause menu
                         self.state_stack.append("PAUSE")
                         self.pause()
+                    elif event.key == pg.K_e:
+                        pg.mixer.Sound.play(self.beep_sound)
                     elif event.key == pg.K_a:
                         self.a_down = True
                     elif event.key == pg.K_d:
