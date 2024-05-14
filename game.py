@@ -382,17 +382,17 @@ class Game:
                 pg.mixer.Sound.play(self.tire_destroyed_sound)
                 self.player.tires = self.destroyed_tires
 
-            if self.a_down and self.pit_timer <= 0:
+            if self.a_down and self.pit_timer <= 0 and not pg.sprite.collide_mask(self.player, self.computer):
                 if self.player.velocity != 0.0:  # Can only turn when moving forwards or backwards
                     self.player.rotation = (self.player.rotation + self.player.rotation_speed) % 360
-            elif self.d_down and self.pit_timer <= 0:
+            elif self.d_down and self.pit_timer <= 0 and not pg.sprite.collide_mask(self.player, self.computer):
                 if self.player.velocity != 0.0:  # Can only turn when moving forwards or backwards
                     if self.player.rotation - self.player.rotation_speed < 0:
                         self.player.rotation = 360.0 - self.player.rotation_speed
                     else:
                         self.player.rotation -= self.player.rotation_speed
 
-            if self.w_down and self.pit_timer <= 0:  # Accelerate forwards when W is held down
+            if self.w_down and self.pit_timer <= 0 and not pg.sprite.collide_mask(self.player, self.computer):  # Accelerate forwards when W is held down
                 self.player.acceleration = self.player.tires.max_forwards_acceleration
                 self.player.velocity = min(self.player.velocity + self.player.acceleration, self.player.tires.max_forwards_velocity)
             elif self.s_down and self.pit_timer <= 0:  # Accelerate backwards when S is held down
@@ -423,6 +423,10 @@ class Game:
             # Check if the player is over the finish
             self.player.over_finish = self.over_finish(self.player)
             self.computer.over_finish = self.over_finish(self.computer)
+
+            if pg.sprite.collide_mask(self.player, self.computer):
+                self.player.velocity = 0.0
+                self.player.acceleration = 0.0
 
             # Render
             self.screen.fill(self.bg_color)
@@ -465,6 +469,10 @@ class Game:
             pg.draw.rect(self.screen, self.color_green, map_grass)
             pg.draw.circle(self.screen, self.color_green, (360, 480), 70)
             pg.draw.circle(self.screen, self.color_green, (900, 480), 70)
+
+
+
+
             # Barricade 1 (center of the race track)
             map_baricade1 = pg.Rect((360, 475), (540, 10))
             pg.draw.rect(self.screen, self.color_red, map_baricade1)
@@ -475,6 +483,9 @@ class Game:
             pg.draw.polygon(self.screen, self.color_red, ((360, 160), (220, 260), (230, 260), (370, 160)))
             # Barricade 4 (Barricade to the right of the pitstop)
             pg.draw.polygon(self.screen, self.color_red, ((890, 160), (1030, 260), (1040, 260), (900, 160)))
+
+
+
             # Game UI Background
             ui_bg = pg.Rect((0, 0), (self.screen.get_width(), 120))
             pg.draw.rect(self.screen, self.color_dark_grey, ui_bg)
@@ -496,13 +507,13 @@ class Game:
             self.screen.blit(ui_current_lap_player_text, (1025, 10))
             self.screen.blit(ui_current_lap_computer_text, (1145, 10))
 
-            if self.player.tires.type == "SOFT":
+            if self.player.tires.tire_type == "SOFT":
                 self.screen.blit(ui_tire_soft, (335, 42))
                 self.screen.blit(ui_tire_soft_text, (358, 61))
-            elif self.player.tires.type == "MEDIUM":
+            elif self.player.tires.tire_type == "MEDIUM":
                 self.screen.blit(ui_tire_medium, (335, 42))
                 self.screen.blit(ui_tire_medium_text, (353, 60))
-            elif self.player.tires.type == "HARD":
+            elif self.player.tires.tire_type == "HARD":
                 self.screen.blit(ui_tire_hard, (335, 42))
                 self.screen.blit(ui_tire_hard_text, (356, 61))
 

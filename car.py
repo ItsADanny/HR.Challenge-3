@@ -4,12 +4,12 @@ from tire import Tire
 
 class Car(pg.sprite.Sprite):
     def __init__(self, image: pg.Surface, position: list, tires: Tire):
-        super().__init__()
+        pg.sprite.Sprite.__init__(self)
         self.image: pg.Surface = image
-        # self.tire_type: int = 0  # 0=soft 1=medium 2=hard
         self.position: list = position
         self.rotation: float = 0.0  # 0-359
         self.tires = tires
+        self.rect = self.image.get_rect(center=self.position)
 
         self.acceleration: float = 0
         self.velocity: float = 0.0
@@ -19,4 +19,5 @@ class Car(pg.sprite.Sprite):
 
     def render(self, screen: pg.Surface):
         rotated_model = pg.transform.rotate(self.image, self.rotation)
+        self.rect = rotated_model.get_rect(center=self.position)
         screen.blit(rotated_model, rotated_model.get_rect(center=self.position))
